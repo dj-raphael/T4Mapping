@@ -1,0 +1,8 @@
+bin
+obj
+*.suo
+*.user
+packages
+*.sln.ide
+/TestResults
+/node_modules/

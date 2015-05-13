@@ -1,0 +1,417 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ template hostspecific="True" #>
+<#@ assembly name="C:\Program Files (x86)\Common Files\microsoft shared\MSEnv\PublicAssemblies\envdte.dll" #>
+<#@ import namespace="EnvDTE" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Reflection"#>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
+<# 
+	// create an instance of the AutomationHelper class so 
+	// that it is accessible from everywhere within the template
+	this.VisualStudioHelper = new AutomationHelper(this.Host);
+#><#+
+/// <summary>
+/// Object that provides functionality for automating Visual Studio.
+/// </summary>
+public AutomationHelper VisualStudioHelper;
+
+/// <summary>
+/// This class provides functionality for automating Visual Studio.
+/// </summary>
+public class AutomationHelper 
+{
+		
+	/// <summary>
+	/// Creates a new instance of this class
+	/// </summary>
+	public AutomationHelper(object host)
+	{
+		// store a reference to the template host
+		// we will need this frequently
+		this.Host = host as ITextTemplatingEngineHost;
+	}
+	
+	private EnvDTE.DTE _DTE = null;
+	/// <summary>
+	/// Returns a reference to the primary management object of Visual Studio
+	/// <summary>
+	public EnvDTE.DTE DTE
+	{
+		get
+		{
+			if (_DTE == null)
+            {
+				var hostServiceProvider = this.Host as IServiceProvider;
+				if (hostServiceProvider != null)
+					_DTE = hostServiceProvider.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            }
+			return _DTE;
+		}
+	}
+	
+	/// <summary>
+	/// Stores a reference to the Host of the t4 template
+	/// </summary>
+	public ITextTemplatingEngineHost Host { get; private set; }
+
+
+	#region Solution and Projects
+	/// <summary>
+	/// Gets the full path of the solution file
+	/// </summary>
+	public string SolutionFile
+    {
+		get
+        {
+			return this.DTE.Solution.FileName;
+        }
+    }
+	/// <summary>
+	/// Gets the file name of the currently opened solution.
+	/// </summary>
+	public string SolutionFileName
+    {
+		get
+        {
+			return System.IO.Path.GetFileName(this.DTE.Solution.FileName);
+        }
+    }
+	/// <summary>
+	/// Gets the name of the currently opened solution
+	/// </summary>
+	public string SolutionName
+    {
+		get
+        {
+			return this.DTE.Solution.Properties.Item("Name").Value.ToString();
+        }
+    }
+
+	/// <summary>
+	/// Gets a list of all Projects within the solution
+	/// </summary>
+	public IEnumerable<EnvDTE.Project> GetAllProjects()
+    {
+		var ret = new List<EnvDTE.Project>();
+
+		// take all projects that are at top level of the solution
+		// and recursively search Project folders
+		var topLevelProjects = this.DTE.Solution.Projects;
+
+		foreach(EnvDTE.Project project in topLevelProjects)
+        {
+			if (project.Kind == vsProjectType.SolutionFolder)
+				ret.AddRange(GetProjectsFromItemsCollection(project.ProjectItems));
+			else
+				ret.Add(project);
+        }
+
+		return ret;
+    }
+	/// <summary>
+	/// Gets the project object within the current solution by a given project name.
+	/// </summary>
+	public EnvDTE.Project GetProject(string projectName)
+    {
+		return this.GetAllProjects()
+				   .Where(p => p.Name == projectName)
+				   .First();
+    }
+	/// <summary>
+	/// Gets the project containing the .tt-File
+	/// </summary>
+	public EnvDTE.Project CurrentProject
+    {
+		get
+        {
+			return this.FindProjectItem(this.Host.TemplateFile).ContainingProject;
+        }
+    }
+	#endregion
+
+	#region Project Items
+	public EnvDTE.ProjectItem FindProjectItem(string fileName)
+    {
+		return this.DTE.Solution.FindProjectItem(fileName);
+    }
+	/// <summary>
+	/// Gets all project items from the current solution
+	/// </summary>
+	public IEnumerable<EnvDTE.ProjectItem>GetAllSolutionItems()
+    {
+		var ret = new List<EnvDTE.ProjectItem>();
+
+		// iterate all projects and add their items
+		foreach(EnvDTE.Project project in this.GetAllProjects())
+			ret.AddRange(GetAllProjectItems(project));
+
+		return ret;
+    }
+	/// <summary>
+	/// Gets all project items from the current project
+	/// </summary>
+	public IEnumerable<EnvDTE.ProjectItem>GetAllProjectItems()
+    {
+		// get the project of the template file and reeturn all its items
+		var project = this.CurrentProject;
+		return GetAllProjectItems(project);
+    }
+	/// <summary>
+	/// Gets all Project items from a given project. 
+	/// </summary>
+	public IEnumerable<EnvDTE.ProjectItem>GetAllProjectItems(EnvDTE.Project project)
+    {
+		return this.GetProjectItemsRecursively(project.ProjectItems);
+    }
+	#endregion
+
+	#region Code Model
+	/// <summary>
+    /// Searches a given collection of CodeElements recursively for objects of the given elementType.
+    /// </summary>
+    /// <param name="elements">Collection of CodeElements to recursively search for matching objects in.</param>
+    /// <param name="elementType">Objects of this CodeModelElement-Type will be returned.</param>
+    /// <param name="includeExternalTypes">If set to true objects that are not part of this solution are retrieved, too. E.g. the INotifyPropertyChanged interface from the System.ComponentModel namespace.</param>
+    /// <returns>A list of CodeElement objects matching the desired elementType.</returns>
+    public List<EnvDTE.CodeElement> GetAllCodeElementsOfType(EnvDTE.CodeElements elements, EnvDTE.vsCMElement elementType, bool includeExternalTypes)
+    {
+        var ret = new List<EnvDTE.CodeElement>();
+
+        foreach (EnvDTE.CodeElement elem in elements)
+        {
+            // iterate all namespaces (even if they are external)
+            // > they might contain project code
+            if (elem.Kind == EnvDTE.vsCMElement.vsCMElementNamespace)
+            {
+                ret.AddRange(GetAllCodeElementsOfType(((EnvDTE.CodeNamespace)elem).Members, elementType, includeExternalTypes));
+            }
+            // if its not a namespace but external
+            // > ignore it
+            else if (elem.InfoLocation == EnvDTE.vsCMInfoLocation.vsCMInfoLocationExternal
+                    && !includeExternalTypes)
+                continue;
+            // if its from the project
+            // > check its members
+            else if (elem.IsCodeType)
+            {
+                ret.AddRange(GetAllCodeElementsOfType(((EnvDTE.CodeType)elem).Members, elementType, includeExternalTypes));
+            }
+
+            // if this item is of the desired type
+            // > store it
+            if (elem.Kind == elementType)
+                ret.Add(elem);
+        }
+
+        return ret;
+    }
+
+    public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
+    {
+        var ret = new List<EnvDTE.CodeClass>();
+        foreach(ProjectItem item in items)
+        {
+            FileCodeModel codeModel = item.FileCodeModel;
+            if (codeModel != null) {
+                var a = FindClass(codeModel.CodeElements);
+                if (a != null) {
+                    ret.Add(a);
+                }
+            }
+        }
+        return ret;
+    }
+
+    private CodeClass FindClass(CodeElements elements)
+    {
+        foreach (CodeElement element in elements)
+        {
+            CodeClass enumeration = element as CodeClass;
+            if (enumeration != null)
+                return enumeration;
+            enumeration = FindClass(element.Children);
+            if (enumeration != null)
+                return enumeration;
+        }
+        return null;
+    }
+	#endregion
+
+
+	#region Auxiliary stuff
+	private List<EnvDTE.Project> GetProjectsFromItemsCollection(EnvDTE.ProjectItems items)
+    {
+		var ret = new List<EnvDTE.Project>();
+
+		foreach(EnvDTE.ProjectItem item in items)
+        {
+			if (item.SubProject == null)
+				continue;
+			else if (item.SubProject.Kind == vsProjectType.SolutionFolder)
+				ret.AddRange(GetProjectsFromItemsCollection(item.SubProject.ProjectItems));
+			else if (item.SubProject.Kind == vsProjectType.VisualBasic
+				  || item.SubProject.Kind == vsProjectType.VisualCPlusPlus
+				  || item.SubProject.Kind == vsProjectType.VisualCSharp
+				  || item.SubProject.Kind == vsProjectType.VisualJSharp
+				  || item.SubProject.Kind == vsProjectType.WebProject)
+				ret.Add(item.SubProject);
+        }
+
+		return ret;
+    }
+	public List<EnvDTE.ProjectItem> GetProjectItemsRecursively(EnvDTE.ProjectItems items)
+    {
+		var ret = new List<EnvDTE.ProjectItem>();
+        if (items == null) return ret;
+		
+		foreach(EnvDTE.ProjectItem item in items)
+        {
+			ret.Add(item);
+			ret.AddRange(GetProjectItemsRecursively(item.ProjectItems));
+        }
+
+		return ret;
+    }
+	#endregion
+	
+	public List<CodeClass> GetClassesByAttributeName(string attributeName, string projectName)
+        {
+			var attrClasses = new List<CodeClass>();
+
+			var project = this.GetProject(projectName);
+			
+			var items = this.GetAllProjectItems(project);
+			
+			var myClasses = this.GetClasses(items);
+
+			foreach(CodeClass classes in myClasses)
+			{
+				 foreach(CodeAttribute attr in classes.Attributes)
+					{
+						if (attr.Name == attributeName) 
+
+						attrClasses.Add(classes);
+					}
+            }
+
+			 return attrClasses;
+        }
+
+		public string GetAttributeValueByNameAttributeAndProperty(CodeClass cc, string nameAttribute, string nameProperty)
+        {
+			var value = "";
+			foreach(CodeAttribute ca in cc.Attributes) 
+					{ 
+						if(ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
+						{
+							value = ca.Value.Remove(0,ca.Value.IndexOf(nameProperty));
+							value = value.Replace(" ","");
+							if(value.Contains(","))
+								value = value.Remove(ca.Value.IndexOf(","));
+						}
+					}
+			
+			 return value; 
+        }
+
+		public CodeTypeRef GetCodeTypeRefInCodeProperty(CodeProperty codeproperty)
+        {
+			CodeTypeRef codeTypeRefDO = codeproperty.Type;
+			return codeTypeRefDO;
+        }
+
+		public List<AttributeAndPropeperties> GetAttributesAndPropepertiesCollection (CodeElement element)
+        {
+			CodeElements attributes = null;
+			
+			var	codeClass = element as CodeClass;
+			if(codeClass != null) 
+				attributes = codeClass.Attributes;
+
+			var	codeProperty = element as CodeProperty;
+			if(codeProperty != null) 
+				attributes = codeProperty.Attributes;
+
+			var attributeCollection = new List<AttributeAndPropeperties>();
+			var listOfStringProperties = new List<string>();
+
+//			Regex attributesRegex = new Regex(@"\[\s*(?<Name>\w*)\s*(\((?<arguments>.*)\))?\s*\]", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+//			MatchCollection matchesAttrs = attributesRegex.Matches(attributeString);
+
+			foreach (CodeAttribute ca in attributes)
+			{
+				var properties = ca.Value.ToString();
+				var dictionaryOfAttributes = new Dictionary<string, string>();
+				var countProperties = 0;
+
+				Regex attributesRegex = new Regex(@"(@""(?:""""|[^""])*"")|(""(?:\\""|\\r|\\n|\\t|\\\\|[^""\\])*"")", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+				MatchCollection matchesProperties = attributesRegex.Matches(properties);
+
+				foreach (var property in matchesProperties)
+				{
+					properties = properties.Replace(property.ToString(), "%%string" + countProperties + "%%");
+					listOfStringProperties.Add(property.ToString());
+					countProperties++;
+				}
+
+				countProperties = 0;
+				foreach (string property in properties.Split(',').ToList())
+				{
+					if (property.Contains("%%string"))
+					{
+						if (property.Split(':', '=').Count() == 2)
+						{
+							if (property.Split(':', '=')[1].Contains("%%string"))
+								dictionaryOfAttributes.Add(property.Split(':', '=')[0], listOfStringProperties[Convert.ToInt32(property.Split(':', '=')[1].Replace("%%string", "").Replace("%", ""))].Replace("\"",""));
+						}
+						else
+							dictionaryOfAttributes.Add(countProperties.ToString(), listOfStringProperties[Convert.ToInt32(property.Replace("%%string", "").Replace("%", ""))].Replace("\"",""));
+					}
+					else
+					{
+						if (property.Split(':', '=').Count() == 2)
+							dictionaryOfAttributes.Add(property.Split(':', '=')[0], property.Split(':', '=')[1]);
+						else
+							dictionaryOfAttributes.Add(countProperties.ToString(), property);    
+					}
+
+					countProperties++;
+				}
+
+				attributeCollection.Add(new AttributeAndPropeperties
+				{
+					Name = ca.Name,
+					Patameters = dictionaryOfAttributes
+				});
+		}
+
+			return attributeCollection;
+		}
+
+}
+
+		public class AttributeAndPropeperties
+        {
+			public string Name { get; set; }
+			public Dictionary<string, string> Patameters { get; set; }
+
+			public string GetParameterByKeyName(string key)
+			{
+				return Patameters.FirstOrDefault(x => x.Key.ToString().Trim() == key).Value;
+			}
+		}
+
+public class vsProjectType
+{
+	public const string SolutionFolder = "{66A26720-8FB5-11D2-AA7E-00C04F688DDE}";
+	public const string VisualBasic = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}";
+	public const string VisualCSharp = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";
+	public const string VisualCPlusPlus = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
+	public const string VisualJSharp = "{E6FDF86B-F3D1-11D4-8576-0002A516ECE8}";
+	public const string WebProject = "{E24C65DC-7377-472b-9ABA-BC803B73C61A}";
+}
+
+#>
