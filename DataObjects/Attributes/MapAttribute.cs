@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ConsoleApplicationParceAttribute.Attributes
+namespace DataObjects.Attributes
 {
     public class MapAttribute : Attribute
     {

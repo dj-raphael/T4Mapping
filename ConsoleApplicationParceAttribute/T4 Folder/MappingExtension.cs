@@ -2,139 +2,96 @@
 
 using System.Linq;
 
- namespace YumaPos.Server.BusinessLogic.Generation 
+namespace ConsoleApplicationParceAttribute.T4_Folder  
 { 
 	 public static class MappingExtension
 	 { 
 
-//DataTransferObject.OrderFoodDto
-//DataTransferObject.Product
-//DataTransferObject.RestaurantOrderDto
-//DataTransferObject.RoleDto
-//DataTransferObject.TaxDto
-//DataTransferObject.TransactionDto	
-		public static DataTransferObject.AvailabilityDto MapToDto (this DataObjects.Availability item)
+//DataObjects.NewsToTags
+//DataObjects.Tag	
+		public static DataTransferObject.NewsDto MapToDto (this DataObjects.News item)
 		{  
 			if (item == null) return null;
 			
-			return new DataTransferObject.AvailabilityDto 
+			return new DataTransferObject.NewsDto 
 			{
-					AvailabilityId =  trata2, 
-					Days =  item.Days,
-					TimeFrom =  item.TimeFrom,
-					TimeTo =  item.TimeTo,
+					NewsId =  item.NewsId,
+					Title =  item.Title,
+					Anounce =  item.Anounce,
+					Text =  item.Text,
+					Category =  item.Category.MapToDto(),
+					Created =  item.Created,
+					Tags =  item.NewsToTags.Select(p => p.Tag.Name), 
 			};
 		}
 
-		public static DataObjects.Availability MapFromDto (this DataTransferObject.AvailabilityDto itemDto)
+		public static DataObjects.News MapFromDto (this DataTransferObject.NewsDto itemDto)
 		{  
 			if (itemDto == null) return null;
 			
-			return new DataObjects.Availability 
+			return new DataObjects.News 
 			{
-					AvailabilityId =  tratata,
-					Days =  itemDto.Days,
-					TimeFrom =  itemDto.TimeFrom,
-					TimeTo =  itemDto.TimeTo,
+					NewsId =  itemDto.NewsId,
+					Title =  itemDto.Title,
+					Anounce =  itemDto.Anounce,
+					Text =  itemDto.Text,
+					Category =  itemDto.Category.MapFromDto(),
+					Created =  itemDto.Created,
+					NewsToTags =  itemDto.Tags.Select(x => x.MapFromDto()),
 			};
 		}
 	
 	
-		public static DataTransferObject.KitchenDto MapToDto (this DataObjects.Kitchen item)
+		public static DataTransferObject.CategoryDto MapToDto (this DataObjects.NewsCategory item)
 		{  
 			if (item == null) return null;
 			
-			return new DataTransferObject.KitchenDto 
+			return new DataTransferObject.CategoryDto 
 			{
-					KitchenId =  item.KitchenId,
+					NewsCategoryId =  item.NewsCategoryId,
 					Name =  item.Name,
+					ParentCategory =  item.ParentCategory.MapToDto(),
+					ChildCategories =  item.ChildCategories.Select(x => x.MapToDto()),
 			};
 		}
 
-		public static DataObjects.Kitchen MapFromDto (this DataTransferObject.KitchenDto itemDto)
+		public static DataObjects.NewsCategory MapFromDto (this DataTransferObject.CategoryDto itemDto)
 		{  
 			if (itemDto == null) return null;
 			
-			return new DataObjects.Kitchen 
+			return new DataObjects.NewsCategory 
 			{
-					KitchenId =  itemDto.KitchenId,
+					NewsCategoryId =  itemDto.NewsCategoryId,
 					Name =  itemDto.Name,
+					ParentCategory =  itemDto.ParentCategory.MapFromDto(),
+					ChildCategories =  itemDto.ChildCategories.Select(x => x.MapFromDto()),
 			};
 		}
 	
 	
-		public static DataTransferObject.OrderItemDto MapToDto (this DataObjects.OrderItem item)
+		public static DataTransferObject.UserDto MapToDto (this DataObjects.User item)
 		{  
 			if (item == null) return null;
 			
-			return new DataTransferObject.OrderItemDto 
+			return new DataTransferObject.UserDto 
 			{
-					OrderId =  item.OrderId,
-					MenuItemId =  item.MenuItemId,
-			};
-		}
-
-		public static DataObjects.OrderItem MapFromDto (this DataTransferObject.OrderItemDto itemDto)
-		{  
-			if (itemDto == null) return null;
-			
-			return new DataObjects.OrderItem 
-			{
-					OrderId =  itemDto.OrderId,
-					MenuItemId =  itemDto.MenuItemId,
-			};
-		}
-	
-	
-		public static DataTransferObject.StoreDto MapToDto (this DataObjects.StoreTable item)
-		{  
-			if (item == null) return null;
-			
-			return new DataTransferObject.StoreDto 
-			{
-					Id =  item.Id,
-					Name =  item.Name,
-					ContactPerson =  item.ContactPerson,
+					UserId =  item.UserId,
+					Username =  item.Login,
+					Created =  item.Created,
 					Email =  item.Email,
-					Phone =  item.Phone,
-					Url =  item.Url,
-					Ip =  item.Ip,
-					Country =  item.Country,
-					State =  item.State,
-					City =  item.City,
-					PostalCode =  item.PostalCode,
-					Address =  item.Address,
-					Logo =  item.Logo,
-					TimeShift =  item.TimeShift,
-					TimeZone =  item.TimeZone,
-					OpeningTime =  item.OpeningTime,
-					IsActive =  item.IsActive,
 			};
 		}
 
-		public static DataObjects.StoreTable MapFromDto (this DataTransferObject.StoreDto itemDto)
+		public static DataObjects.User MapFromDto (this DataTransferObject.UserDto itemDto)
 		{  
 			if (itemDto == null) return null;
 			
-			return new DataObjects.StoreTable 
+			return new DataObjects.User 
 			{
-					Id =  itemDto.Id,
-					Name =  itemDto.Name,
-					ContactPerson =  itemDto.ContactPerson,
+					UserId =  itemDto.UserId,
+					Login =  itemDto.Username,
+					Created =  itemDto.Created,
 					Email =  itemDto.Email,
-					Phone =  itemDto.Phone,
-					Url =  itemDto.Url,
-					Ip =  itemDto.Ip,
-					Country =  itemDto.Country,
-					State =  itemDto.State,
-					City =  itemDto.City,
-					PostalCode =  itemDto.PostalCode,
-					Address =  itemDto.Address,
-					Logo =  itemDto.Logo,
-					TimeShift =  itemDto.TimeShift,
-					TimeZone =  itemDto.TimeZone,
-					OpeningTime =  itemDto.OpeningTime,
-					IsActive =  itemDto.IsActive,
 			};
 		}
 	

@@ -59,207 +59,214 @@ public class MapHelperClass
 	/// </summary>
 	public ITextTemplatingEngineHost Host { get; private set; }
 
-		private static List<string> SystemTypes =  new List<string>{
-			"string",
-			"int",
-			"int?",
-			"short",
-			"short?",
-			"decimal",
-			"decimal?",
-			"float",
-			"float?",
-			"double",
-			"double?",
-			"bool",
-			"bool?",
-			"System.Guid",
-			"System.Boolean",
-			"System.Byte",
-			"System.Char",
-			"System.DateTime",
-			"System.DateTime?",
-			"System.Decimal",
-			"System.Decimal?",
-			"System.Double",
-			"System.Empty",	
-			"System.Int16",
-			"System.Int32",
-			"System.Int64",
-			"System.Int16?",
-			"System.Int32?",
-			"System.Int64?",
-			"System.SByte",
-			"System.Single",
-			"System.String",
-			"System.UInt16",
-			"System.UInt32",
-			"System.UInt64",
-			"System.Nullable<System.Guid>",
-			"System.Nullable<System.Boolean>",
-			"System.Nullable<System.Byte>",
-			"System.Nullable<System.Char>",
-			"System.Nullable<System.DateTime>",
-			"System.Nullable<System.DateTime?>",
-			"System.Nullable<System.Decimal>",
-			"System.Nullable<System.Double>",
-			"System.Nullable<System.Empty>",
-			"System.Nullable<System.Int16>",
-			"System.Nullable<System.Int32>",
-			"System.Nullable<System.Int64>",
-			"System.Nullable<System.SByte>",
-			"System.Nullable<System.Single>",
-			"System.Nullable<System.String>",
-			"System.Nullable<System.UInt16>",
-			"System.Nullable<System.UInt32>",
-			"System.Nullable<System.UInt64>"
-        };
-	
-		public bool IsSystemType(string type) 
-		{
-			return SystemTypes.Any(x => x == type);
-		}	
+    private static List<string> SystemTypes = new List<string>
+    {
+        "string",
+        "int",
+        "int?",
+        "short",
+        "short?",
+        "decimal",
+        "decimal?",
+        "float",
+        "float?",
+        "double",
+        "double?",
+        "bool",
+        "bool?",
+        "System.Guid",
+        "System.Boolean",
+        "System.Byte",
+        "System.Char",
+        "System.DateTime",
+        "System.DateTime?",
+        "System.Decimal",
+        "System.Decimal?",
+        "System.Double",
+        "System.Empty",
+        "System.Int16",
+        "System.Int32",
+        "System.Int64",
+        "System.Int16?",
+        "System.Int32?",
+        "System.Int64?",
+        "System.SByte",
+        "System.Single",
+        "System.String",
+        "System.UInt16",
+        "System.UInt32",
+        "System.UInt64",
+        "System.Nullable<System.Guid>",
+        "System.Nullable<System.Boolean>",
+        "System.Nullable<System.Byte>",
+        "System.Nullable<System.Char>",
+        "System.Nullable<System.DateTime>",
+        "System.Nullable<System.DateTime?>",
+        "System.Nullable<System.Decimal>",
+        "System.Nullable<System.Double>",
+        "System.Nullable<System.Empty>",
+        "System.Nullable<System.Int16>",
+        "System.Nullable<System.Int32>",
+        "System.Nullable<System.Int64>",
+        "System.Nullable<System.SByte>",
+        "System.Nullable<System.Single>",
+        "System.Nullable<System.String>",
+        "System.Nullable<System.UInt16>",
+        "System.Nullable<System.UInt32>",
+        "System.Nullable<System.UInt64>"
+    };
 
-		public string GetMapName(CodeClass codeclass)
+    public bool IsSystemType(string type)
+    {
+        return SystemTypes.Any(x => x == type);
+    }
+
+    public string GetMapName(CodeClass codeclass)
+    {
+        string value = GetAttributeValueByNameAttributeInCodeClass(codeclass, "Map", "Name");
+        if (!string.IsNullOrEmpty(value))
         {
-			string value = GetAttributeValueByNameAttributeInCodeClass(codeclass, "Map", "Name");
-			if (!string.IsNullOrEmpty(value)) {
-				return value;
+            return value;
+        }
+
+        var className = codeclass.Name.ToString();
+        if (className.ToLower().IndexOf("dto") + 3 == className.Length)
+            className = className.ToLower().Replace("dto", "");
+        return className.ToLower();
+    }
+
+    public string GetAttributeValueByNameAttributeInCodeClass(CodeClass cc, string nameAttribute,
+        string nameProperty)
+    {
+        var value = "";
+
+        foreach (CodeAttribute ca in cc.Attributes)
+        {
+            if (ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
+            {
+                value = ca.Value.Remove(0, ca.Value.IndexOf(nameProperty));
+                value = value.Replace(" ", "");
+                if (value.Contains(",")) value = value.Remove(value.IndexOf(","));
+
+                value = value.Remove(0, nameProperty.Length + 1);
+                value = value.Replace("\"", "").ToLower();
+
+                if (value.IndexOf("dto") + 3 == value.Length)
+                    value = value.Replace("dto", "");
+            }
+        }
+
+        return value;
+    }
+
+		public string GetAttributeValueByNameAttributeInCodeProperty(CodeProperty cp, string nameAttribute,
+			string nameProperty)
+		{
+			var value = "";
+			foreach (CodeAttribute ca in cp.Attributes)
+			{
+				if (ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
+				{
+					value = ca.Value.Remove(0, ca.Value.IndexOf(nameProperty));
+					value = value.Replace(" ", "");
+					if (value.Contains(",")) value = value.Remove(value.IndexOf(","));
+
+					value = value.Remove(0, nameProperty.Length + 1);
+					value = value.Replace("\"", "");
+
+				}
+			}
+
+			return value;
+		}
+
+        public bool CompareTwoProperty(CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
+        {
+            var DOType = DOCodeProperty.Type.AsString;
+            var DtoType = DtoCodeProperty.Type.AsString;
+            bool isExistInSystemCollectionTypes = false;
+
+            var DOName = GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name") == ""
+                ? DOCodeProperty.Name
+                : GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name");
+            var DtoName = GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name") == ""
+                ? DtoCodeProperty.Name
+                : GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name");
+
+            if (IsSystemType(DOType) || IsSystemType(DtoType))
+                isExistInSystemCollectionTypes = true;
+
+            if (DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable"))
+            {
+                DOType = DOType.Remove(0, DOType.IndexOf("<") + 1);
+                DOType = DOType.Replace(">", "");
+
+                DtoType = DtoType.Remove(0, DtoType.IndexOf("<") + 1);
+                DtoType = DtoType.Replace(">", "");
+
+                if (listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType) ==
+                    listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) && DOName == DtoName)
+                    return true;
+
+                if (IsSystemType(DOType) || IsSystemType(DtoType))
+                    isExistInSystemCollectionTypes = true;
             }
 
-			var className = codeclass.Name.ToString();
-			if(className.ToLower().IndexOf("dto") + 3 == className.Length )
-						className = className.ToLower().Replace("dto","");
-			return className.ToLower();
+            var mapDtoAndDo = listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType);
+            if (!isExistInSystemCollectionTypes && mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType &&
+                DOName == DtoName)
+                return true;
+
+            if (DOType == DtoType && isExistInSystemCollectionTypes && DOName == DtoName)
+                return true;
+
+            return false;
         }
 
-		public string GetAttributeValueByNameAttributeInCodeClass(CodeClass cc, string nameAttribute, string nameProperty)
+        public KindOfProperty GetKindOfMapProperty(CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)
         {
-			var value = "";
+            var type = codeProperty.Type.AsString;
 
-			foreach(CodeAttribute ca in cc.Attributes) 
-					{ 
-						if(ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
-						{
-							value = ca.Value.Remove(0,ca.Value.IndexOf(nameProperty));
-							value = value.Replace(" ","");
-							if(value.Contains(",")) value = value.Remove(value.IndexOf(","));
+            if (IsSystemType(type)) return KindOfProperty.SystemType;
+            if (type.Contains("IEnumerable"))
+            {
+                type = type.Remove(0, type.IndexOf("<") + 1);
+                type = type.Replace(">", "");
 
-							value = value.Remove(0,nameProperty.Length +1);
-							value = value.Replace("\"","").ToLower();
+                if (IsSystemType(type)) return KindOfProperty.SystemType;
+                return KindOfProperty.CollectionAttributeClasses;
+            }
+            if (listOfSimilarClasses.Any(x => x.DOClass.FullName == type)) return KindOfProperty.AttributeClass;
 
-							if(value.IndexOf("dto") + 3 == value.Length )
-								value = value.Replace("dto","");
-						}
-					}
-			
-			 return value;
+            return KindOfProperty.None;
         }
+    }
 
-		public string GetAttributeValueByNameAttributeInCodeProperty(CodeProperty cp, string nameAttribute, string nameProperty)
-        {
-			var value = "";
-			foreach(CodeAttribute ca in cp.Attributes) 
-					{ 
-						if(ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
-						{
-							value = ca.Value.Remove(0,ca.Value.IndexOf(nameProperty));
-							value = value.Replace(" ","");
-							if(value.Contains(",")) value = value.Remove(value.IndexOf(","));
+    public class MapDtoAndDo
+    {
+        public CodeClass DOClass { get; set; }
+        public CodeClass DtoClass { get; set; }
+        public IEnumerable<MapPropertiesDtoAndDo> MapPropertiesDtoAndDo { get; set; }
+    }
 
-							value = value.Remove(0,nameProperty.Length +1);
-							value = value.Replace("\"","");
+    public class MapPropertiesDtoAndDo
+    {
+        public CodeProperty DOPropertyName { get; set; }
+        public CodeProperty DTOPropertyName { get; set; }
+        public CodeTypeRef DOPropertyType { get; set; }
+        public CodeTypeRef DtoropertyType { get; set; }
+        public string ToDtoFunction { get; set; }
+        public string FromDtoFunction { get; set; }
+        public KindOfProperty KindOMapfProperty { get; set; }
+    }
 
-//							value = ca.Value.Replace(" ","");
-//							value = value.Remove(0,value.IndexOf(nameProperty+"=\"") + nameProperty.Length + 2);
-//							value = value.Remove(value.IndexOf("\"")).ToLower();
-						}
-					}
-			
-			 return value;
-        }
-
-		public bool CompareTwoProperty (CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
-		{
-			var DOType = DOCodeProperty.Type.AsString;
-			var DtoType = DtoCodeProperty.Type.AsString;
-			bool isExistInSystemCollectionTypes = false;
-
-			var DOName = GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name") == "" ? DOCodeProperty.Name : GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name");
-			var DtoName = GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name") == "" ? DtoCodeProperty.Name : GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name");
-
-			if(IsSystemType(DOType) || IsSystemType(DtoType))
-				isExistInSystemCollectionTypes = true;
-
-			if(DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable"))
-			{
-				DOType = DOType.Remove(0,DOType.IndexOf("<") +1);
-				DOType = DOType.Replace(">", "");
-
-				DtoType = DtoType.Remove(0,DtoType.IndexOf("<") +1);
-				DtoType = DtoType.Replace(">", "");
-
-				if(listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType) == listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) && DOName == DtoName)
-						return true;
-
-				if(IsSystemType(DOType) || IsSystemType(DtoType))
-					isExistInSystemCollectionTypes = true;
-			}
-
-			var mapDtoAndDo = listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType);
-			if(!isExistInSystemCollectionTypes && mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType && DOName == DtoName)
-					return true;
-
-			if(DOType == DtoType && isExistInSystemCollectionTypes && DOName == DtoName)
-					return true;
-
-			return false;
-		}
-
-		public KindOfProperty GetKindOfMapProperty (CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)
-		{
-			var type = codeProperty.Type.AsString;
-
-			if(IsSystemType(type)) 	return KindOfProperty.SystemType;
-			if(type.Contains("IEnumerable")) 
-			{
-				type = type.Remove(0,type.IndexOf("<") +1);
-				type = type.Replace(">", "");
-
-				if(IsSystemType(type)) 	return KindOfProperty.SystemType;
-				return KindOfProperty.CollectionAttributeClasses;
-			}
-			if(listOfSimilarClasses.Any(x => x.DOClass.FullName == type))  return KindOfProperty.AttributeClass;
-
-			return KindOfProperty.None;
-		}
-}
-
-	public class MapDtoAndDo  
-	{	
-		public CodeClass DOClass {get; set;}
-		public CodeClass DtoClass {get; set;}
-		public IEnumerable<MapPropertiesDtoAndDo> MapPropertiesDtoAndDo {get; set;}
-	}
-
-	public class MapPropertiesDtoAndDo
-	{	
-		public CodeProperty DOPropertyName {get; set;}
-		public CodeProperty DTOPropertyName {get; set;}
-		public CodeTypeRef DOPropertyType {get; set;}
-		public CodeTypeRef DtoropertyType {get; set;}
-		public string ToDtoFunction {get; set; }
-		public string FromDtoFunction {get; set; } 
-		public KindOfProperty KindOMapfProperty {get; set;} 
-	}
-
-	public enum KindOfProperty
-	{
-		SystemType = 0,
-		AttributeClass = 1,
-		CollectionAttributeClasses = 2,
-		FunctionAttribute = 3,
-		None = 9
-	}
+    public enum KindOfProperty
+    {
+        SystemType = 0,
+        AttributeClass = 1,
+        CollectionAttributeClasses = 2,
+        FunctionAttribute = 3,
+        None = 9
+    }
 
 #>
