@@ -26,10 +26,7 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
         CodeClass doClass = classesWithMapAttribute.First();
         foreach (CodeClass dtoClass in classesWithMapAttributeDto)
         {
-            var doName = MapHelper.GetMapName(doClass);
-            var dtoName = MapHelper.GetMapName(dtoClass);
-
-            if (doName == dtoName)
+            if (MapHelper.CompareTwoCodeElementsNames((CodeElement) doClass, (CodeElement) dtoClass))
             {
                 listOfSimilarClasses.Add(new MapDtoAndDo
                 {
@@ -49,85 +46,115 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
         #><#= "\r\n//" + dtoClass.FullName#><#
     }
 
-    foreach(var similarClass in listOfSimilarClasses) 
-    { 
-        var allProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
-        var CECollection =	similarClass.DOClass.Bases;
-        foreach(CodeClass ce in CECollection)  allProperties.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
+	foreach(var similarClass in listOfSimilarClasses) 
+	{ 
+		var allProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
+		var CECollection =	similarClass.DOClass.Bases;
+		foreach(CodeClass ce in CECollection)  allProperties.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
 
-        var allPropertiesDto = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
-        CECollection =	similarClass.DtoClass.Bases;
-        foreach(CodeClass ce in CECollection)  allPropertiesDto.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
+		var allPropertiesDto = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
+		CECollection =	similarClass.DtoClass.Bases;
+		foreach(CodeClass ce in CECollection)  allPropertiesDto.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
 
-        var listOfSimilarProperties = new List<MapPropertiesDtoAndDo>();
+		var listOfSimilarProperties = new List<MapPropertiesDtoAndDo>();
 
-        while (allProperties.Any())
-        {
-            CodeProperty codeProperty = (CodeProperty) allProperties.First();
-            foreach (CodeProperty dtoCodeProperty in allPropertiesDto)
-            {
-                var doPropertyName = codeProperty.Name;
-                var dtoPropertyName = dtoCodeProperty.Name;
+		while (allProperties.Any())
+		{
+			CodeProperty codeProperty = (CodeProperty) allProperties.First();
+			foreach (CodeProperty dtoCodeProperty in allPropertiesDto)
+			{
+				if(MapHelper.CompareTwoCodeElementsNames((CodeElement) codeProperty, (CodeElement) dtoCodeProperty))
+				{
+					var doPropertyName = codeProperty.Name;
+					var dtoPropertyName = dtoCodeProperty.Name;
 
-                if (MapHelper.CompareTwoProperty(codeProperty, dtoCodeProperty, listOfSimilarClasses)) 
-                {
-                    var FunctionFromDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == "Map" && x.GetParameterByKeyName("FunctionFrom") != null);
-                    var FunctionFrom = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == "Map" && x.GetParameterByKeyName("FunctionFrom") != null);
-                    var FunctionToDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == "Map" && x.GetParameterByKeyName("FunctionTo") != null);
-                    var FunctionTo =  VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == "Map" && x.GetParameterByKeyName("FunctionTo") != null);
+					AttributeAndPropeperties attrDo = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == "Map");
+					AttributeAndPropeperties attrDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == "Map");
 
-                    var FromDtoFunction = "";
-                    var ToDtoFunction = "";
+					var FunctionFromDto = attrDto != null ? attrDto.GetParameterByKeyName("FunctionFrom") : null;
+					var FunctionFrom = attrDo  != null ?  attrDo.GetParameterByKeyName("FunctionFrom") : null;
+					var FunctionToDto = attrDto != null ? attrDto.GetParameterByKeyName("FunctionTo") : null;
+					var FunctionTo =  attrDo  != null ?  attrDo.GetParameterByKeyName("FunctionTo") : null;
 
-                    if(FunctionFromDto != null)
-                    {
-                        if(FunctionTo != null)
-                        { 
-                            if(FunctionFromDto.GetParameterByKeyName("FunctionFrom") != FunctionTo.GetParameterByKeyName("FunctionTo"))
-                                throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
-                        }
+					var FromDtoFunction = "";
+					var ToDtoFunction = "";
 
-                        FromDtoFunction = FunctionFromDto.GetParameterByKeyName("FunctionFrom");
-                    }
-                    else
-                    {
-                        if(FunctionTo != null)
-                            FromDtoFunction = FunctionTo.GetParameterByKeyName("FunctionTo");
-                    }
+					if(FunctionFromDto != null)
+					{
+						if(FunctionTo != null)
+						{ 
+							if(FunctionFromDto != FunctionTo)
+								throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
+						}
 
-                    if(FunctionToDto != null)
-                    {
-                        if(FunctionFrom != null)
-                        {
-                            if(FunctionToDto.GetParameterByKeyName("FunctionTo") != FunctionFrom.GetParameterByKeyName("FunctionFrom"))
-                                throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
-                        }
+						FromDtoFunction = FunctionFromDto;
+					} 
+					else
+					{
+						if(FunctionTo != null)
+							FromDtoFunction = FunctionTo;
+					}
 
-                        ToDtoFunction = FunctionToDto.GetParameterByKeyName("FunctionTo");
-                    }
-                    else
-                    {
-                        if(FunctionFrom != null)
-                            ToDtoFunction = FunctionFrom.GetParameterByKeyName("FunctionFrom");
-                    }
+					if(FunctionToDto != null)
+					{
+						if(FunctionFrom != null)
+						{
+							if(FunctionToDto != FunctionFrom)
+								throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
+						}
 
-                    listOfSimilarProperties.Add(new MapPropertiesDtoAndDo 
-                    {
-                        DOPropertyName = codeProperty,
-                        DTOPropertyName = dtoCodeProperty,
-                        DOPropertyType = codeProperty.Type,
-                        DtoropertyType = dtoCodeProperty.Type,
-                        KindOMapfProperty = MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses),
-                        FromDtoFunction = FromDtoFunction,
-                        ToDtoFunction = ToDtoFunction
-                    });
+						ToDtoFunction = FunctionToDto;
+					}
+					else
+					{
+						if(FunctionFrom != null)
+							ToDtoFunction = FunctionFrom;
+					}
 
-                    allPropertiesDto.Remove((CodeElement)dtoCodeProperty); 
-                    break;
-                }
-            }
-            allProperties.Remove((CodeElement)codeProperty);
-        }
+					if (MapHelper.CompareTwoPropertyType(codeProperty, dtoCodeProperty, listOfSimilarClasses) || ToDtoFunction != "" || FromDtoFunction != "" ) 
+					{
+						var kindOfProperty = MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses);
+
+						if(ToDtoFunction == "" && FromDtoFunction == "" ) 
+						{
+							if(kindOfProperty == KindOfProperty.AttributeClass )
+							{
+								ToDtoFunction = "item." + codeProperty.Name + ".MapToDto()";
+								FromDtoFunction = "itemDto." +  dtoCodeProperty.Name + ".MapFromDto()";
+							}
+							else 
+							{
+								if(kindOfProperty == KindOfProperty.CollectionAttributeClasses) 
+									{
+										ToDtoFunction = "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
+										FromDtoFunction = "itemDto." +  dtoCodeProperty.Name + ".Select(x => x.MapFromDto())";
+									}
+									else  
+									{
+										ToDtoFunction = "item." + codeProperty.Name;
+										FromDtoFunction = "itemDto." +  dtoCodeProperty.Name;
+									}
+							}
+						}
+
+						listOfSimilarProperties.Add(new MapPropertiesDtoAndDo 
+						{
+							DOPropertyName = codeProperty,
+							DTOPropertyName = dtoCodeProperty,
+							DOPropertyType = codeProperty.Type,
+							DtoropertyType = dtoCodeProperty.Type,
+							KindOMapfProperty = kindOfProperty,
+							FromDtoFunction = FromDtoFunction,
+							ToDtoFunction = ToDtoFunction
+						});
+
+						allPropertiesDto.Remove((CodeElement)dtoCodeProperty); 
+						break;
+					}
+				}
+			}
+			allProperties.Remove((CodeElement)codeProperty);
+		}
 
         similarClass.MapPropertiesDtoAndDo = listOfSimilarProperties;
 
@@ -140,25 +167,10 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			{
 <#				foreach(MapPropertiesDtoAndDo property in similarClass.MapPropertiesDtoAndDo)
 				{ 
-#>					<#=property.DTOPropertyName.Name #> = <# if(property.ToDtoFunction != "")
+					if(property.ToDtoFunction != "" ) 
 					{
-						#> <#= property.ToDtoFunction #>, 
+#>					<#=property.DTOPropertyName.Name #> = <#= property.ToDtoFunction #>, 
 <#
-					}
-					else
-					{
-						if(property.KindOMapfProperty == KindOfProperty.AttributeClass)
-							{
-								 #> item.<#= property.DOPropertyName.Name #>.MapToDto(),
-<#							}
-							else {
-									if(property.KindOMapfProperty == KindOfProperty.CollectionAttributeClasses) 
-									{ 
-										#> item.<#= property.DOPropertyName.Name #>.Select(x => x.MapToDto()),
-<#									} else  {
-												#> item.<#= property.DOPropertyName.Name #>,
-<#											}
-								}
 					}
 				} #>
 			};
@@ -172,29 +184,13 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			{
 <#				foreach(MapPropertiesDtoAndDo property in similarClass.MapPropertiesDtoAndDo)
 				{ 
-#>					<#=property.DOPropertyName.Name  #> = <# if(property.FromDtoFunction != "")
+					if(property.FromDtoFunction != "" )
 					{
-						#> <#= property.FromDtoFunction #>,
+#>					<#=property.DOPropertyName.Name  #> = <#= property.FromDtoFunction #>,
 <#					}
-					else
-					{
-						if(property.KindOMapfProperty == KindOfProperty.AttributeClass)
-							{
-								 #> itemDto.<#= property.DTOPropertyName.Name #>.MapFromDto(),
-<#							}
-							else {
-									if(property.KindOMapfProperty == KindOfProperty.CollectionAttributeClasses) 
-									{ 
-										#> itemDto.<#= property.DTOPropertyName.Name #>.Select(x => x.MapFromDto()),
-<#									} else  {
-												#> itemDto.<#= property.DTOPropertyName.Name #>,
-<#											}
-								}
-					}
 				} #>
 			};
 		}
-	
 <#	} #>
 	}
 }

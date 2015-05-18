@@ -121,26 +121,20 @@ public class MapHelperClass
         return SystemTypes.Any(x => x == type);
     }
 
-    public string GetMapName(CodeClass codeclass)
-    {
-        string value = GetAttributeValueByNameAttributeInCodeClass(codeclass, "Map", "Name");
-        if (!string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        var className = codeclass.Name.ToString();
-        if (className.ToLower().IndexOf("dto") + 3 == className.Length)
-            className = className.ToLower().Replace("dto", "");
-        return className.ToLower();
-    }
-
-    public string GetAttributeValueByNameAttributeInCodeClass(CodeClass cc, string nameAttribute,
-        string nameProperty)
+    public string GetAttributeValueByNameAttribute(CodeElement element, string nameAttribute, string nameProperty)
     {
         var value = "";
+		CodeElements attributes = null;
 
-        foreach (CodeAttribute ca in cc.Attributes)
+        var codeClass = element as CodeClass;
+        if (codeClass != null)
+            attributes = codeClass.Attributes;
+
+        var codeProperty = element as CodeProperty;
+        if (codeProperty != null)
+            attributes = codeProperty.Attributes;
+
+        foreach (CodeAttribute ca in attributes)
         {
             if (ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
             {
@@ -151,7 +145,7 @@ public class MapHelperClass
                 value = value.Remove(0, nameProperty.Length + 1);
                 value = value.Replace("\"", "").ToLower();
 
-                if (value.IndexOf("dto") + 3 == value.Length)
+                if (value.IndexOf("dto") + 3 == value.Length && codeClass != null)
                     value = value.Replace("dto", "");
             }
         }
@@ -159,39 +153,11 @@ public class MapHelperClass
         return value;
     }
 
-		public string GetAttributeValueByNameAttributeInCodeProperty(CodeProperty cp, string nameAttribute,
-			string nameProperty)
-		{
-			var value = "";
-			foreach (CodeAttribute ca in cp.Attributes)
-			{
-				if (ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
-				{
-					value = ca.Value.Remove(0, ca.Value.IndexOf(nameProperty));
-					value = value.Replace(" ", "");
-					if (value.Contains(",")) value = value.Remove(value.IndexOf(","));
-
-					value = value.Remove(0, nameProperty.Length + 1);
-					value = value.Replace("\"", "");
-
-				}
-			}
-
-			return value;
-		}
-
-        public bool CompareTwoProperty(CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
+        public bool CompareTwoPropertyType(CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
         {
             var DOType = DOCodeProperty.Type.AsString;
             var DtoType = DtoCodeProperty.Type.AsString;
             bool isExistInSystemCollectionTypes = false;
-
-            var DOName = GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name") == ""
-                ? DOCodeProperty.Name
-                : GetAttributeValueByNameAttributeInCodeProperty(DOCodeProperty, "Map", "Name");
-            var DtoName = GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name") == ""
-                ? DtoCodeProperty.Name
-                : GetAttributeValueByNameAttributeInCodeProperty(DtoCodeProperty, "Map", "Name");
 
             if (IsSystemType(DOType) || IsSystemType(DtoType))
                 isExistInSystemCollectionTypes = true;
@@ -205,7 +171,7 @@ public class MapHelperClass
                 DtoType = DtoType.Replace(">", "");
 
                 if (listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType) ==
-                    listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) && DOName == DtoName)
+                    listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) )
                     return true;
 
                 if (IsSystemType(DOType) || IsSystemType(DtoType))
@@ -213,14 +179,45 @@ public class MapHelperClass
             }
 
             var mapDtoAndDo = listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType);
-            if (!isExistInSystemCollectionTypes && mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType &&
-                DOName == DtoName)
+            if (!isExistInSystemCollectionTypes && mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType)
                 return true;
 
-            if (DOType == DtoType && isExistInSystemCollectionTypes && DOName == DtoName)
+            if (DOType == DtoType && isExistInSystemCollectionTypes)
                 return true;
 
             return false;
+        }
+
+		public bool CompareTwoCodeElementsNames(CodeElement elementDO, CodeElement elementDto)
+        {
+			var mapDo = GetAttributeValueByNameAttribute(elementDO, "Map", "Name");
+			var mapDto = GetAttributeValueByNameAttribute(elementDto, "Map", "Name");
+
+			var codeClassDO = elementDO as CodeClass;
+			var codeClassDto = elementDto as CodeClass;
+
+			if (codeClassDO != null && codeClassDto != null)
+				{
+					if(string.IsNullOrEmpty(mapDo)) mapDo = codeClassDO.Name;
+					if(string.IsNullOrEmpty(mapDto)) mapDto = codeClassDto.Name;
+
+					if (mapDto.ToLower().IndexOf("dto") + 3 == mapDto.Length)
+						mapDto = mapDto.ToLower().Replace("dto", "");
+				}
+
+			var codePropertyDO = elementDO as CodeProperty;
+			var codePropertyDto = elementDto as CodeProperty;
+
+			if (codePropertyDO != null && codePropertyDto != null)
+				{
+					if(string.IsNullOrEmpty(mapDo)) mapDo = codePropertyDO.Name;
+					if(string.IsNullOrEmpty(mapDto)) mapDto = codePropertyDto.Name;
+				}
+			
+			if (mapDo.ToLower() == mapDto.ToLower()) 
+				return true;
+
+				return false;
         }
 
         public KindOfProperty GetKindOfMapProperty(CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)

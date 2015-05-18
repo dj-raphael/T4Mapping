@@ -15,13 +15,15 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataTransferObject.NewsDto 
 			{
-					NewsId =  item.NewsId,
-					Title =  item.Title,
-					Anounce =  item.Anounce,
-					Text =  item.Text,
-					Category =  item.Category.MapToDto(),
-					Created =  item.Created,
-					Tags =  item.NewsToTags.Select(p => p.Tag.Name), 
+					NewsId = item.NewsId, 
+					Title = item.Title, 
+					Anounce = item.Anounce, 
+					Text = item.Text, 
+					Status = item.Status.ToString(), 
+					Category = item.Category.MapToDto(), 
+					Created = item.Created, 
+					Author = item.Author.Login, 
+					Tags = item.NewsToTags.Select(p => p.Tag.Name), 
 			};
 		}
 
@@ -31,16 +33,15 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataObjects.News 
 			{
-					NewsId =  itemDto.NewsId,
-					Title =  itemDto.Title,
-					Anounce =  itemDto.Anounce,
-					Text =  itemDto.Text,
-					Category =  itemDto.Category.MapFromDto(),
-					Created =  itemDto.Created,
-					NewsToTags =  itemDto.Tags.Select(x => x.MapFromDto()),
+					NewsId = itemDto.NewsId,
+					Title = itemDto.Title,
+					Anounce = itemDto.Anounce,
+					Text = itemDto.Text,
+					Status = (DataObjects.Attributes.StatusEnum) System.Enum.Parse(typeof(DataObjects.Attributes.StatusEnum), itemDto.Status),
+					Category = itemDto.Category.MapFromDto(),
+					Created = itemDto.Created,
 			};
 		}
-	
 	
 		public static DataTransferObject.CategoryDto MapToDto (this DataObjects.NewsCategory item)
 		{  
@@ -48,10 +49,10 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataTransferObject.CategoryDto 
 			{
-					NewsCategoryId =  item.NewsCategoryId,
-					Name =  item.Name,
-					ParentCategory =  item.ParentCategory.MapToDto(),
-					ChildCategories =  item.ChildCategories.Select(x => x.MapToDto()),
+					NewsCategoryId = item.NewsCategoryId, 
+					Name = item.Name, 
+					ParentCategory = item.ParentCategory.MapToDto(), 
+					ChildCategories = item.ChildCategories.Select(x => x.MapToDto()), 
 			};
 		}
 
@@ -61,13 +62,12 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataObjects.NewsCategory 
 			{
-					NewsCategoryId =  itemDto.NewsCategoryId,
-					Name =  itemDto.Name,
-					ParentCategory =  itemDto.ParentCategory.MapFromDto(),
-					ChildCategories =  itemDto.ChildCategories.Select(x => x.MapFromDto()),
+					NewsCategoryId = itemDto.NewsCategoryId,
+					Name = itemDto.Name,
+					ParentCategory = itemDto.ParentCategory.MapFromDto(),
+					ChildCategories = itemDto.ChildCategories.Select(x => x.MapFromDto()),
 			};
 		}
-	
 	
 		public static DataTransferObject.UserDto MapToDto (this DataObjects.User item)
 		{  
@@ -75,10 +75,10 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataTransferObject.UserDto 
 			{
-					UserId =  item.UserId,
-					Username =  item.Login,
-					Created =  item.Created,
-					Email =  item.Email,
+					UserId = item.UserId, 
+					Username = item.Login, 
+					Created = item.Created, 
+					Email = item.Email, 
 			};
 		}
 
@@ -88,12 +88,11 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			
 			return new DataObjects.User 
 			{
-					UserId =  itemDto.UserId,
-					Login =  itemDto.Username,
-					Created =  itemDto.Created,
-					Email =  itemDto.Email,
+					UserId = itemDto.UserId,
+					Login = itemDto.Username,
+					Created = itemDto.Created,
+					Email = itemDto.Email,
 			};
 		}
-	
 	}
 }
