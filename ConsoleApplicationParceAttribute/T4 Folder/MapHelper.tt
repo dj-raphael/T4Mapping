@@ -11,9 +11,9 @@
 <#@ import namespace="System.Text.RegularExpressions" #>
 
 <# 
-	// create an instance of the MapHelperClass class so 
-	// that it is accessible from everywhere within the template
-	this.MapHelper = new MapHelperClass(this.Host);
+    // create an instance of the MapHelperClass class so 
+    // that it is accessible from everywhere within the template
+    this.MapHelper = new MapHelperClass(this.Host);
 #><#+
 /// <summary>
 /// Object that provides functionality for automating Visual Studio.
@@ -25,39 +25,39 @@ public MapHelperClass MapHelper;
 /// </summary>
 public class MapHelperClass 
 {
-		
-	/// <summary>
-	/// Creates a new instance of this class
-	/// </summary>
-	public MapHelperClass(object host)
-	{
-		// store a reference to the template host
-		// we will need this frequently
-		this.Host = host as ITextTemplatingEngineHost;
-	}
-	
-	private EnvDTE.DTE _DTE = null;
-	/// <summary>
-	/// Returns a reference to the primary management object of Visual Studio
-	/// <summary>
-	public EnvDTE.DTE DTE
-	{
-		get
-		{
-			if (_DTE == null)
+        
+    /// <summary>
+    /// Creates a new instance of this class
+    /// </summary>
+    public MapHelperClass(object host)
+    {
+        // store a reference to the template host
+        // we will need this frequently
+        this.Host = host as ITextTemplatingEngineHost;
+    }
+    
+    private EnvDTE.DTE _DTE = null;
+    /// <summary>
+    /// Returns a reference to the primary management object of Visual Studio
+    /// <summary>
+    public EnvDTE.DTE DTE
+    {
+        get
+        {
+            if (_DTE == null)
             {
-				var hostServiceProvider = this.Host as IServiceProvider;
-				if (hostServiceProvider != null)
-					_DTE = hostServiceProvider.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+                var hostServiceProvider = this.Host as IServiceProvider;
+                if (hostServiceProvider != null)
+                    _DTE = hostServiceProvider.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             }
-			return _DTE;
-		}
-	}
-	
-	/// <summary>
-	/// Stores a reference to the Host of the t4 template
-	/// </summary>
-	public ITextTemplatingEngineHost Host { get; private set; }
+            return _DTE;
+        }
+    }
+    
+    /// <summary>
+    /// Stores a reference to the Host of the t4 template
+    /// </summary>
+    public ITextTemplatingEngineHost Host { get; private set; }
 
     private static List<string> SystemTypes = new List<string>
     {
@@ -124,10 +124,10 @@ public class MapHelperClass
     public string GetMapName(CodeElement element)
     {
         var value = element.Name;
-		const string nameAttribute = "Map";
-		const string nameProperty = "Name";
+        const string nameAttribute = "Map";
+        const string nameProperty = "Name";
 
-		CodeElements attributes = null;
+        CodeElements attributes = null;
 
         var codeClass = element as CodeClass;
         if (codeClass != null)
@@ -152,12 +152,12 @@ public class MapHelperClass
                     value = value.Replace("dto", "");
             }
         }
-		
-		value = value.ToLower();
+        
+        value = value.ToLower();
 
-		if(value.ToLower().IndexOf("dto") + 3 == value.Length && codeClass != null)
-			value = value.Replace("dto", "");
-			
+        if(value.ToLower().IndexOf("dto") + 3 == value.Length && codeClass != null)
+            value = value.Replace("dto", "");
+            
         return value;
     }
 
