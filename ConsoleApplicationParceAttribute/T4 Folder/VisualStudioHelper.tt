@@ -303,23 +303,6 @@ public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
         return attrClasses;
     }
 
-    public string GetAttributeValueByNameAttributeAndProperty(CodeClass cc, string nameAttribute,string nameProperty)
-    {
-        var value = "";
-        foreach (CodeAttribute ca in cc.Attributes)
-        {
-            if (ca.Name.Contains(nameAttribute) && ca.Value.Contains(nameProperty))
-            {
-                value = ca.Value.Remove(0, ca.Value.IndexOf(nameProperty));
-                value = value.Replace(" ", "");
-                if (value.Contains(","))
-                    value = value.Remove(ca.Value.IndexOf(","));
-            }
-        }
-
-        return value;
-    }
-
     public CodeTypeRef GetCodeTypeRefInCodeProperty(CodeProperty codeproperty)
     {
         CodeTypeRef codeTypeRefDO = codeproperty.Type;

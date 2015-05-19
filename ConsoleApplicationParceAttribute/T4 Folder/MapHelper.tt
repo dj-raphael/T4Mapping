@@ -121,9 +121,12 @@ public class MapHelperClass
         return SystemTypes.Any(x => x == type);
     }
 
-    public string GetAttributeValueByNameAttribute(CodeElement element, string nameAttribute, string nameProperty)
+    public string GetMapName(CodeElement element)
     {
-        var value = "";
+        var value = element.Name;
+		const string nameAttribute = "Map";
+		const string nameProperty = "Name";
+
 		CodeElements attributes = null;
 
         var codeClass = element as CodeClass;
@@ -149,7 +152,12 @@ public class MapHelperClass
                     value = value.Replace("dto", "");
             }
         }
+		
+		value = value.ToLower();
 
+		if(value.ToLower().IndexOf("dto") + 3 == value.Length && codeClass != null)
+			value = value.Replace("dto", "");
+			
         return value;
     }
 
@@ -188,37 +196,6 @@ public class MapHelperClass
             return false;
         }
 
-		public bool CompareTwoCodeElementsNames(CodeElement elementDO, CodeElement elementDto)
-        {
-			var mapDo = GetAttributeValueByNameAttribute(elementDO, "Map", "Name");
-			var mapDto = GetAttributeValueByNameAttribute(elementDto, "Map", "Name");
-
-			var codeClassDO = elementDO as CodeClass;
-			var codeClassDto = elementDto as CodeClass;
-
-			if (codeClassDO != null && codeClassDto != null)
-				{
-					if(string.IsNullOrEmpty(mapDo)) mapDo = codeClassDO.Name;
-					if(string.IsNullOrEmpty(mapDto)) mapDto = codeClassDto.Name;
-
-					if (mapDto.ToLower().IndexOf("dto") + 3 == mapDto.Length)
-						mapDto = mapDto.ToLower().Replace("dto", "");
-				}
-
-			var codePropertyDO = elementDO as CodeProperty;
-			var codePropertyDto = elementDto as CodeProperty;
-
-			if (codePropertyDO != null && codePropertyDto != null)
-				{
-					if(string.IsNullOrEmpty(mapDo)) mapDo = codePropertyDO.Name;
-					if(string.IsNullOrEmpty(mapDto)) mapDto = codePropertyDto.Name;
-				}
-			
-			if (mapDo.ToLower() == mapDto.ToLower()) 
-				return true;
-
-				return false;
-        }
 
         public KindOfProperty GetKindOfMapProperty(CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)
         {

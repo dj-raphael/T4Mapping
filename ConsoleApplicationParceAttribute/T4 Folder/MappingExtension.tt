@@ -26,13 +26,14 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
         CodeClass doClass = classesWithMapAttribute.First();
         foreach (CodeClass dtoClass in classesWithMapAttributeDto)
         {
-            if (MapHelper.CompareTwoCodeElementsNames((CodeElement) doClass, (CodeElement) dtoClass))
+            if (MapHelper.GetMapName((CodeElement)doClass) == MapHelper.GetMapName((CodeElement)dtoClass))
             {
                 listOfSimilarClasses.Add(new MapDtoAndDo
                 {
                     DOClass = doClass,
                     DtoClass = dtoClass
                 });
+
                 classesWithMapAttributeDto.Remove(dtoClass);
                 isPairFounded = true;
                 break;
@@ -63,7 +64,8 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
 			CodeProperty codeProperty = (CodeProperty) allProperties.First();
 			foreach (CodeProperty dtoCodeProperty in allPropertiesDto)
 			{
-				if(MapHelper.CompareTwoCodeElementsNames((CodeElement) codeProperty, (CodeElement) dtoCodeProperty))
+
+				if(MapHelper.GetMapName((CodeElement) codeProperty) == MapHelper.GetMapName((CodeElement) dtoCodeProperty))
 				{
 					var doPropertyName = codeProperty.Name;
 					var dtoPropertyName = dtoCodeProperty.Name;
