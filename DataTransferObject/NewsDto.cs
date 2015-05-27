@@ -7,7 +7,7 @@ namespace DataTransferObject
     [Map]
     public class NewsDto
     {
-        public Guid NewsId { get; set; }
+        public Guid? NewsId { get; set; }
         public string Title { get; set; }
         public string Anounce { get; set; }
         public string Text { get; set; }

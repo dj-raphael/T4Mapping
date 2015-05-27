@@ -33,7 +33,7 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
             
             return new DataObjects.News 
             {
-                    NewsId = itemDto.NewsId,
+                    NewsId = itemDto.NewsId.HasValue ? itemDto.NewsId.Value : default(System.Guid),
                     Title = itemDto.Title,
                     Anounce = itemDto.Anounce,
                     Text = itemDto.Text,

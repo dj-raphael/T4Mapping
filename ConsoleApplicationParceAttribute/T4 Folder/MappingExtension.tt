@@ -44,17 +44,17 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
     }
     foreach(var dtoClass in classesWithMapAttributeDto) 
     {
-        #><#= "\r\n//" + dtoClass.FullName#><#
+        #> <#= "\r\n//" + dtoClass.FullName#> <#
     }
 
     foreach(var similarClass in listOfSimilarClasses) 
     { 
         var allProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
-        var CECollection =    similarClass.DOClass.Bases;
+        var CECollection = similarClass.DOClass.Bases;
         foreach(CodeClass ce in CECollection)  allProperties.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
 
         var allPropertiesDto = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
-        CECollection =    similarClass.DtoClass.Bases;
+        CECollection = similarClass.DtoClass.Bases;
         foreach(CodeClass ce in CECollection)  allPropertiesDto.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementProperty, true));
 
         var listOfSimilarProperties = new List<MapPropertiesDtoAndDo>();
@@ -64,6 +64,8 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
             CodeProperty codeProperty = (CodeProperty) allProperties.First();
             foreach (CodeProperty dtoCodeProperty in allPropertiesDto)
             {
+                AttributeAndPropeperties attrIgnoreDo = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == "MapIgnore");
+                AttributeAndPropeperties attrIgnoreDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == "MapIgnore");
 
                 if(MapHelper.GetMapName((CodeElement) codeProperty) == MapHelper.GetMapName((CodeElement) dtoCodeProperty))
                 {
@@ -74,9 +76,9 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                     AttributeAndPropeperties attrDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == "Map");
 
                     var FunctionFromDto = attrDto != null ? attrDto.GetParameterByKeyName("FunctionFrom") : null;
-                    var FunctionFrom = attrDo  != null ?  attrDo.GetParameterByKeyName("FunctionFrom") : null;
+                    var FunctionFrom = attrDo != null ? attrDo.GetParameterByKeyName("FunctionFrom") : null;
                     var FunctionToDto = attrDto != null ? attrDto.GetParameterByKeyName("FunctionTo") : null;
-                    var FunctionTo =  attrDo  != null ?  attrDo.GetParameterByKeyName("FunctionTo") : null;
+                    var FunctionTo = attrDo != null ? attrDo.GetParameterByKeyName("FunctionTo") : null;
 
                     var FromDtoFunction = "";
                     var ToDtoFunction = "";
@@ -86,7 +88,9 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                         if(FunctionTo != null)
                         { 
                             if(FunctionFromDto != FunctionTo)
-                                throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
+                            {
+                                   throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
+                            }
                         }
 
                         FromDtoFunction = FunctionFromDto;
@@ -94,7 +98,9 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                     else
                     {
                         if(FunctionTo != null)
+                        {
                             FromDtoFunction = FunctionTo;
+                        }
                     }
 
                     if(FunctionToDto != null)
@@ -102,7 +108,9 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                         if(FunctionFrom != null)
                         {
                             if(FunctionToDto != FunctionFrom)
+                            {
                                 throw new Exception("In the pair: " + similarClass.DOClass.Name + " " + similarClass.DtoClass.Name + " was occured exception. Check pair " + dtoCodeProperty.Name + " " + codeProperty.Name + " properties");
+                            }
                         }
 
                         ToDtoFunction = FunctionToDto;
@@ -110,7 +118,24 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                     else
                     {
                         if(FunctionFrom != null)
+                        {
                             ToDtoFunction = FunctionFrom;
+                        }
+                    }
+
+                    if(!MapHelper.CompareTwoPropertyType(codeProperty, dtoCodeProperty, listOfSimilarClasses) && ToDtoFunction == "" && FromDtoFunction == ""   )
+                    {
+                        if(MapHelper.IsInNullableDictionary(codeProperty.Type.AsString, dtoCodeProperty.Type.AsString))
+                        {
+                              FromDtoFunction = "itemDto." + dtoCodeProperty.Name + ".HasValue ? itemDto." + dtoCodeProperty.Name + ".Value : default(" + codeProperty.Type.AsString + ")";
+                              ToDtoFunction = "item." +  codeProperty.Name;
+                        }
+                        
+                        if(MapHelper.IsInNullableDictionary(dtoCodeProperty.Type.AsString, codeProperty.Type.AsString))
+                        {
+                              ToDtoFunction = "item." + codeProperty.Name + ".HasValue ? item." + codeProperty.Name + ".Value : default(" + dtoCodeProperty.Type.AsString + ")";
+                              FromDtoFunction = "itemDto." + dtoCodeProperty.Name;
+                        }
                     }
 
                     if (MapHelper.CompareTwoPropertyType(codeProperty, dtoCodeProperty, listOfSimilarClasses) || ToDtoFunction != "" || FromDtoFunction != "" ) 
@@ -127,15 +152,15 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
                             else 
                             {
                                 if(kindOfProperty == KindOfProperty.CollectionAttributeClasses) 
-                                    {
-                                        ToDtoFunction = "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
-                                        FromDtoFunction = "itemDto." +  dtoCodeProperty.Name + ".Select(x => x.MapFromDto())";
-                                    }
-                                    else  
-                                    {
-                                        ToDtoFunction = "item." + codeProperty.Name;
-                                        FromDtoFunction = "itemDto." +  dtoCodeProperty.Name;
-                                    }
+                                {
+                                    ToDtoFunction = "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
+                                    FromDtoFunction = "itemDto." +  dtoCodeProperty.Name + ".Select(x => x.MapFromDto())";
+                                }
+                                else  
+                                {
+                                    ToDtoFunction = "item." + codeProperty.Name;
+                                    FromDtoFunction = "itemDto." +  dtoCodeProperty.Name;
+                                }
                             }
                         }
 

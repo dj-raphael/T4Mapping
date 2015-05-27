@@ -209,7 +209,7 @@ public class AutomationHelper
         return ret;
     }
 
-public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
+    public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
     {
         var ret = new List<EnvDTE.CodeClass>();
         foreach (ProjectItem item in items)
@@ -240,9 +240,7 @@ public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
         }
         return null;
     }
-
     #endregion
-
 
     #region Auxiliary stuff
 
@@ -280,7 +278,6 @@ public List<EnvDTE.CodeClass> GetClasses(IEnumerable<EnvDTE.ProjectItem> items)
 
         return ret;
     }
-
     #endregion
 
     public List<CodeClass> GetClassesByAttributeName(string attributeName, string projectName)

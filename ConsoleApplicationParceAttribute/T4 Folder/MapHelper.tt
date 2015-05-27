@@ -59,66 +59,66 @@ public class MapHelperClass
     /// </summary>
     public ITextTemplatingEngineHost Host { get; private set; }
 
-    private static List<string> SystemTypes = new List<string>
+    public Dictionary<string,string[]> SystemNullableTypes = new Dictionary<string,string[]>
     {
-        "string",
-        "int",
-        "int?",
-        "short",
-        "short?",
-        "decimal",
-        "decimal?",
-        "float",
-        "float?",
-        "double",
-        "double?",
-        "bool",
-        "bool?",
-        "System.Guid",
-        "System.Boolean",
-        "System.Byte",
-        "System.Char",
-        "System.DateTime",
-        "System.DateTime?",
-        "System.Decimal",
-        "System.Decimal?",
-        "System.Double",
-        "System.Empty",
-        "System.Int16",
-        "System.Int32",
-        "System.Int64",
-        "System.Int16?",
-        "System.Int32?",
-        "System.Int64?",
-        "System.SByte",
-        "System.Single",
-        "System.String",
-        "System.UInt16",
-        "System.UInt32",
-        "System.UInt64",
-        "System.Nullable<System.Guid>",
-        "System.Nullable<System.Boolean>",
-        "System.Nullable<System.Byte>",
-        "System.Nullable<System.Char>",
-        "System.Nullable<System.DateTime>",
-        "System.Nullable<System.DateTime?>",
-        "System.Nullable<System.Decimal>",
-        "System.Nullable<System.Double>",
-        "System.Nullable<System.Empty>",
-        "System.Nullable<System.Int16>",
-        "System.Nullable<System.Int32>",
-        "System.Nullable<System.Int64>",
-        "System.Nullable<System.SByte>",
-        "System.Nullable<System.Single>",
-        "System.Nullable<System.String>",
-        "System.Nullable<System.UInt16>",
-        "System.Nullable<System.UInt32>",
-        "System.Nullable<System.UInt64>"
+        {"int", new string[]{"int?", "System.Int32?", "System.Nullable<int>", "System.Nullable<System.Int32>"}},
+        {"System.Int32",new string[]{"int?", "System.Int32?", "System.Nullable<int>", "System.Nullable<System.Int32>"}},
+
+        {"short", new string[]{"short?", "System.Int16?", "System.Nullable<short>", "System.Nullable<System.Int16>"}},
+        {"System.Int16", new string[]{"short?", "System.Int16?", "System.Nullable<short>", "System.Nullable<System.Int16>"}},
+
+        {"long", new string[]{"long?", "System.Int64?", "System.Nullable<long>", "System.Nullable<System.Int64>"}},
+        {"System.Int64", new string[]{"long?", "System.Int64?", "System.Nullable<long>", "System.Nullable<System.Int64>"}},
+
+        {"decimal", new string[]{"decimal?", "System.Decimal?", "System.Nullable<decimal>", "System.Nullable<System.Decimal>"}},
+        {"System.Decimal", new string[]{"decimal?", "System.Decimal?", "System.Nullable<decimal>", "System.Nullable<System.Decimal>"}},
+        
+        {"float", new string[]{"float?", "System.Single?", "System.Nullable<float>", "System.Nullable<System.Single>"}},
+        {"System.Single", new string[]{"float?", "System.Single?", "System.Nullable<float>", "System.Nullable<System.Single>"}},
+        
+        {"double", new string[]{"double?", "System.Double?", "System.Nullable<double>", "System.Nullable<System.Double>"}},
+        {"System.Double", new string[]{"double?", "System.Double?", "System.Nullable<double>", "System.Nullable<System.Double>"}},
+
+        {"bool", new string[]{"bool?", "System.Boolean?", "System.Nullable<bool>", "System.Nullable<System.Boolean>"}},
+        {"System.Boolean", new string[]{"bool?", "System.Boolean?", "System.Nullable<bool>", "System.Nullable<System.Boolean>"}},
+
+        {"byte", new string[]{"byte?", "System.Byte?", "System.Nullable<byte>", "System.Nullable<System.Byte>"}},
+        {"System.Byte", new string[]{"byte?", "System.Byte?", "System.Nullable<byte>", "System.Nullable<System.Byte>"}},
+
+        {"Guid", new string[]{"Guid?", "System.Guid?", "System.Nullable<Guid>", "System.Nullable<System.Guid>"}},
+        {"System.Guid", new string[]{"Guid?", "System.Guid?", "System.Nullable<Guid>", "System.Nullable<System.Guid>"}},
+
+        {"char", new string[]{"char?", "System.Char?", "System.Nullable<char>", "System.Nullable<System.Char>"}},
+        {"System.Char", new string[]{"char?", "System.Char?", "System.Nullable<char>", "System.Nullable<System.Char>"}},
+
+        {"DateTime", new string[]{"DateTime?", "System.DateTime?", "System.Nullable<DateTime>", "System.Nullable<System.DateTime>"}},
+        {"System.DateTime", new string[]{"DateTime?", "System.DateTime?", "System.Nullable<DateTime>", "System.Nullable<System.DateTime>"}},
+
+        {"sbyte", new string[]{"sbyte?", "System.SByte?", "System.Nullable<sbyte>", "System.Nullable<System.SByte>"}},
+        {"System.SByte", new string[]{"sbyte?", "System.SByte?", "System.Nullable<sbyte>", "System.Nullable<System.SByte>"}},
+
+        {"uint", new string[]{"uint?", "System.UInt32?", "System.Nullable<uint>", "System.Nullable<System.UInt32>"}},
+        {"System.UInt32", new string[]{"uint?", "System.UInt32?", "System.Nullable<uint>", "System.Nullable<System.UInt32>"}},
+
+        {"ulong", new string[]{"ulong?", "System.UInt64?", "System.Nullable<ulong>", "System.Nullable<System.UInt64>"}},
+        {"System.UInt64", new string[]{"ulong?", "System.UInt64?", "System.Nullable<ulong>", "System.Nullable<System.UInt64>"}},
+
+        {"ushort", new string[]{"ushort?", "System.UInt16?", "System.Nullable<ushort>", "System.Nullable<System.UInt16>"}},
+        {"System.UInt16", new string[]{"ushort?", "System.UInt16?", "System.Nullable<ushort>", "System.Nullable<System.UInt16>"}},
     };
 
-    public bool IsSystemType(string type)
+    public bool IsInNullableDictionary(string systemtype, string nullableType)
     {
-        return SystemTypes.Any(x => x == type);
+        var nullableCollectionValue =  SystemNullableTypes.FirstOrDefault(x => x.Key.ToString().Trim() == systemtype).Value;
+		
+        if(nullableCollectionValue != null)
+        {
+			var nullableCollection  = nullableCollectionValue.ToList();
+            if(nullableCollection.FirstOrDefault(x => x == nullableType) != null)
+                return true;
+        }
+
+        return false;
     }
 
     public string GetMapName(CodeElement element)
@@ -131,11 +131,15 @@ public class MapHelperClass
 
         var codeClass = element as CodeClass;
         if (codeClass != null)
-            attributes = codeClass.Attributes;
+        {
+                attributes = codeClass.Attributes;
+        }
 
         var codeProperty = element as CodeProperty;
         if (codeProperty != null)
+        {
             attributes = codeProperty.Attributes;
+        }
 
         foreach (CodeAttribute ca in attributes)
         {
@@ -143,78 +147,90 @@ public class MapHelperClass
             {
                 value = ca.Value.Remove(0, ca.Value.IndexOf(nameProperty));
                 value = value.Replace(" ", "");
-                if (value.Contains(",")) value = value.Remove(value.IndexOf(","));
+
+                if (value.Contains(",")) 
+                {
+                    value = value.Remove(value.IndexOf(","));
+                }
 
                 value = value.Remove(0, nameProperty.Length + 1);
                 value = value.Replace("\"", "").ToLower();
 
-                if (value.IndexOf("dto") + 3 == value.Length && codeClass != null)
+                if (value.EndsWith("dto") && codeClass != null)
+                {
                     value = value.Replace("dto", "");
+                }
             }
         }
         
         value = value.ToLower();
 
-        if(value.ToLower().IndexOf("dto") + 3 == value.Length && codeClass != null)
+        if(value.EndsWith("dto") && codeClass != null)
+        {
             value = value.Replace("dto", "");
+        }
             
         return value;
     }
 
-        public bool CompareTwoPropertyType(CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
+    public bool CompareTwoPropertyType(CodeProperty DOCodeProperty, CodeProperty DtoCodeProperty, List<MapDtoAndDo> listOfSimilarClasses)
+    {
+        var DOType = DOCodeProperty.Type.AsString;
+        var DtoType = DtoCodeProperty.Type.AsString;
+
+        if (DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable"))
         {
-            var DOType = DOCodeProperty.Type.AsString;
-            var DtoType = DtoCodeProperty.Type.AsString;
-            bool isExistInSystemCollectionTypes = false;
+            DOType = DOType.Remove(0, DOType.IndexOf("<") + 1);
+            DOType = DOType.Replace(">", "");
 
-            if (IsSystemType(DOType) || IsSystemType(DtoType))
-                isExistInSystemCollectionTypes = true;
+            DtoType = DtoType.Remove(0, DtoType.IndexOf("<") + 1);
+            DtoType = DtoType.Replace(">", "");
 
-            if (DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable"))
+            if (listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType) == listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) )
             {
-                DOType = DOType.Remove(0, DOType.IndexOf("<") + 1);
-                DOType = DOType.Replace(">", "");
-
-                DtoType = DtoType.Remove(0, DtoType.IndexOf("<") + 1);
-                DtoType = DtoType.Replace(">", "");
-
-                if (listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType) ==
-                    listOfSimilarClasses.FirstOrDefault(x => x.DtoClass.FullName == DtoType) )
-                    return true;
-
-                if (IsSystemType(DOType) || IsSystemType(DtoType))
-                    isExistInSystemCollectionTypes = true;
+                return true;
             }
+        }
 
-            var mapDtoAndDo = listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType);
-            if (!isExistInSystemCollectionTypes && mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType)
-                return true;
+        var mapDtoAndDo = listOfSimilarClasses.FirstOrDefault(x => x.DOClass.FullName == DOType);
+        if (mapDtoAndDo != null && mapDtoAndDo.DtoClass.FullName == DtoType)
+        {
+            return true;
+        }
 
-            if (DOType == DtoType && isExistInSystemCollectionTypes)
-                return true;
-
-            return false;
+        if (DOType == DtoType)
+        {
+            return true;
         }
 
 
-        public KindOfProperty GetKindOfMapProperty(CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)
-        {
-            var type = codeProperty.Type.AsString;
-
-            if (IsSystemType(type)) return KindOfProperty.SystemType;
-            if (type.Contains("IEnumerable"))
-            {
-                type = type.Remove(0, type.IndexOf("<") + 1);
-                type = type.Replace(">", "");
-
-                if (IsSystemType(type)) return KindOfProperty.SystemType;
-                return KindOfProperty.CollectionAttributeClasses;
-            }
-            if (listOfSimilarClasses.Any(x => x.DOClass.FullName == type)) return KindOfProperty.AttributeClass;
-
-            return KindOfProperty.None;
-        }
+        return false;
     }
+
+    public KindOfProperty GetKindOfMapProperty(CodeProperty codeProperty, List<MapDtoAndDo> listOfSimilarClasses)
+    {
+        var type = codeProperty.Type.AsString;
+
+
+        if (type.Contains("IEnumerable"))
+        {
+            type = type.Remove(0, type.IndexOf("<") + 1);
+            type = type.Replace(">", "");
+
+            if (listOfSimilarClasses.Any(x => x.DOClass.FullName == type)) 
+            {
+               return KindOfProperty.CollectionAttributeClasses;
+            }
+        }
+
+        if (listOfSimilarClasses.Any(x => x.DOClass.FullName == type)) 
+        {
+            return KindOfProperty.AttributeClass;
+        }
+
+        return KindOfProperty.None;
+    }
+}
 
     public class MapDtoAndDo
     {
@@ -236,7 +252,6 @@ public class MapHelperClass
 
     public enum KindOfProperty
     {
-        SystemType = 0,
         AttributeClass = 1,
         CollectionAttributeClasses = 2,
         FunctionAttribute = 3,
