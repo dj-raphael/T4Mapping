@@ -7,6 +7,7 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Reflection"#>
+<#@ import namespace="System.Text.RegularExpressions" #>
 <#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
 <# 
     // create an instance of the AutomationHelper class so 
@@ -379,6 +380,41 @@ public class AutomationHelper
             
         return attributeCollection;
      }
+
+    public bool IsExistSetterInCodeProperty(CodeProperty codeproperty)
+    {
+        try
+        {
+            if(codeproperty.Setter != null) 
+            { 
+                return true; 
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    public bool IsExistGetterInCodeProperty(CodeProperty codeproperty)
+    {
+        try
+        {
+            if(codeproperty.Getter != null) 
+            { 
+                return true; 
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
     }
 
     public class AttributeAndPropeperties
