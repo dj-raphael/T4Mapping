@@ -45,7 +45,7 @@
     <Compile Include="Attributes\MapAttribute.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="T4 Folder\MappingExtension.cs">
+    <Compile Include="T4 Folder\MappingExtension.g.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>MappingExtension.tt</DependentUpon>
@@ -61,7 +61,7 @@
     </None>
     <None Include="T4 Folder\MappingExtension.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MappingExtension.cs</LastGenOutput>
+      <LastGenOutput>MappingExtension.g.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
