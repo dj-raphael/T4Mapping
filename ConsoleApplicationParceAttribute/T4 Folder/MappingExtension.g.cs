@@ -3,7 +3,7 @@
 using System.Linq;
 
 
-namespace ConsoleApplicationParceAttribute.T4_Folder
+namespace YumaPos.CommonViewModels.Core.MapExtensions
 {
     public static class MapExtensionsViewModel 
     {

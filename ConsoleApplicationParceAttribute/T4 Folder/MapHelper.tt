@@ -345,17 +345,17 @@ public class MapHelperClass
  
         foreach(string project in MapHelper.DoProjects)
         {
-            classesWithMapAttribute = VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project);
+            classesWithMapAttribute.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
         }
 
         foreach(string project in MapHelper.DtoProjects)
         {
-            classesWithMapAttributeDto = VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project);
+            classesWithMapAttributeDto.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
         }
 
     #>
 
-namespace ConsoleApplicationParceAttribute.T4_Folder
+namespace YumaPos.CommonViewModels.Core.MapExtensions
 {
     public static class <#= MapHelper.MapExtensionClassName #> 
     {
@@ -365,7 +365,6 @@ namespace ConsoleApplicationParceAttribute.T4_Folder
             while (classesWithMapAttribute.Any())
             {
                 isPairFounded = false;
-
                 CodeClass doClass = classesWithMapAttribute.First();
                 foreach (CodeClass dtoClass in classesWithMapAttributeDto)
                 {
