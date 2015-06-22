@@ -1,6 +1,5 @@
 ﻿<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ output extension="g.cs" #>
-<#@ include file="VisualStudioHelper.tt" #>
 <#@ include file="MapHelper.tt"#>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -9,6 +8,7 @@
 using System.Linq;
 
 <#
+    MapHelper.MapExtensionNameSpace = "ConsoleApplicationParceAttribute";
     MapHelper.MapExtensionClassName = "MapExtensionsViewModel"; 
     MapHelper.MapAttribute = "Map";
     MapHelper.MapIgnoreAttribute = "MapIgnore";

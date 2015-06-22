@@ -9,7 +9,7 @@
 <#@ import namespace="System.Reflection"#>
 <#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
 <#@ import namespace="System.Text.RegularExpressions" #>
-
+<#@ include file="VisualStudioHelper.tt" #>
 <# 
     // create an instance of the MapHelperClass class so 
     // that it is accessible from everywhere within the template
@@ -60,6 +60,7 @@ public class MapHelperClass
     public ITextTemplatingEngineHost Host { get; private set; }
 
     public string MapExtensionClassName { get; set; }
+    public string MapExtensionNameSpace { get; set; }
 
     public List<string> DoProjects { get; set; }
     public List<string> DtoProjects { get; set; }
@@ -335,6 +336,11 @@ public class MapHelperClass
             throw new Exception("Name of Generated Class wasn't set");
         }
 
+        if(MapHelper.MapExtensionNameSpace == null || MapHelper.MapExtensionNameSpace == "")
+        {
+            throw new Exception("Namespace of Generated Class wasn't set");
+        }
+
         if(MapHelper.MapAttribute == null || MapHelper.MapAttribute == "")
         {
             throw new Exception("Attribute for Mapping doesn't exist");
@@ -355,7 +361,7 @@ public class MapHelperClass
 
     #>
 
-namespace YumaPos.CommonViewModels.Core.MapExtensions
+namespace <#= MapHelper.MapExtensionNameSpace #> 
 {
     public static class <#= MapHelper.MapExtensionClassName #> 
     {
@@ -520,59 +526,34 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
                             var isSetterDto = VisualStudioHelper.IsExistSetterInCodeProperty(dtoCodeProperty);
                             bool ignoreBySetter = false;
 
-                            if(!isSetterDO || !isSetterDto)
-                            {    
-                                foreach(var cf in allMethods)
+                            if(ToDtoFunction == "" && FromDtoFunction == "")
+                            {
+                                if(codeProperty.Type.AsString.Contains("ObservableRangeCollection"))
                                 {
-                                    var codeFunction = cf as CodeFunction;
-                                    if(codeFunction != null)
-                                    {
-                                        if(codeFunction.Name.IndexOf("Set") == 0 && codeFunction.Name.Replace("Set", "") == codeProperty.Name)
-                                        {
-                                            if(MapHelper.GetKindOfMapProperty(dtoCodeProperty, listOfSimilarClasses) == KindOfProperty.CollectionAttributeClasses)
-                                            {
-                                                FromDtoFunction = "item." + codeFunction.Name + "(itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()))";
-                                            }
-
-                                            if(MapHelper.GetKindOfMapProperty(dtoCodeProperty, listOfSimilarClasses) == KindOfProperty.AttributeClass)
-                                            {
-                                                FromDtoFunction = "item." + codeFunction.Name + "(itemDto." + dtoCodeProperty.Name + ".MapFromDto())";
-                                            }
-
-                                            if(MapHelper.GetKindOfMapProperty(dtoCodeProperty, listOfSimilarClasses) == KindOfProperty.None)
-                                            {
-                                                FromDtoFunction = "item." + codeFunction.Name + "(itemDto." + dtoCodeProperty.Name + ")";
-                                            }
-                                        }
-                                    }
+                                    FromDtoFunction = "if(itemDto." + dtoCodeProperty.Name +  " != null) item." + codeProperty.Name + ".ReplaceRange(itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()))";
+									ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
                                 }
 
-                                foreach(var cf in allMethodsDto)
+                                if(dtoCodeProperty.Type.AsString.Contains("ObservableRangeCollection"))
                                 {
-                                    var codeFunction = cf as CodeFunction;
-                                    if(codeFunction != null)
+                                    ToDtoFunction = "if(item." + codeProperty.Name +  " != null) itemDto." + dtoCodeProperty.Name + ".ReplaceRange(item." + codeProperty.Name + ".Select(x => x.MapToDto()))";
+                                    if(FromDtoFunction == "") 
                                     {
-                                        if(codeFunction.Name.IndexOf("Set") == 0 && codeFunction.Name.Replace("Set", "") == dtoCodeProperty.Name)
-                                        {
-                                            if(MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses) == KindOfProperty.CollectionAttributeClasses)
-                                            {
-                                                ToDtoFunction = "itemDto." + codeFunction.Name + "(item." + codeProperty.Name + ".Select(x => x.MapToDto()))";
-                                            }
-
-                                            if(MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses) == KindOfProperty.AttributeClass)
-                                            {
-                                                ToDtoFunction = "itemDto." + codeFunction.Name + "(item." + codeProperty.Name + ".MapToDto())";
-                                            }
-
-                                            if(MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses) == KindOfProperty.None)
-                                            {
-                                                ToDtoFunction = "itemDto." + codeFunction.Name + "(item." + codeProperty.Name + ")";
-                                            }
-                                        }
+                                        FromDtoFunction = "item." + codeProperty.Name + " = " + "itemDto." + dtoCodeProperty.Name;
                                     }
                                 }
                             }
-                    
+
+                            if(!isSetterDO && !codeProperty.Type.AsString.Contains("ObservableRangeCollection"))
+                            {
+                                ignoreBySetter = true;
+                            } 
+
+                            if(!isSetterDto && !dtoCodeProperty.Type.AsString.Contains("ObservableRangeCollection"))
+                            {
+                                ignoreBySetter = true;
+                            }
+
                             if (MapHelper.CompareTwoPropertyType(codeProperty, dtoCodeProperty, listOfSimilarClasses) || ToDtoFunction != "" || FromDtoFunction != "") 
                             {
                                 var kindOfProperty = MapHelper.GetKindOfMapProperty(codeProperty, listOfSimilarClasses);
@@ -633,7 +614,7 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
             { 
                 if(property.ToDtoFunction != "" ) 
                 {
-#>               <#= property.ToDtoFunction #>;
+#>                <#= property.ToDtoFunction #>;
 <#+            }
             } #>
 
@@ -644,18 +625,19 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
         {  
             if (itemDto == null) return null;
             
-            var item =  new <#= similarClass.DOClass.FullName #> ();
+            var item = new <#= similarClass.DOClass.FullName #> ();
 <#+          foreach(MapPropertiesDtoAndDo property in similarClass.MapPropertiesDtoAndDo)
             { 
                 if(property.FromDtoFunction != "" )
                 {
-#>                 <#= property.FromDtoFunction #>;
+#>                <#= property.FromDtoFunction #>;
 <#+             }
             } #>
             
             return item;
         }
     <#+  } #>
+
     }
 }
 <#+  }

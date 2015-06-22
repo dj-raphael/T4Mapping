@@ -1,9 +1,8 @@
 ﻿
-
 using System.Linq;
 
 
-namespace YumaPos.CommonViewModels.Core.MapExtensions
+namespace ConsoleApplicationParceAttribute 
 {
     public static class MapExtensionsViewModel 
     {
@@ -15,15 +14,15 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
             if (item == null) return null;
             
             var itemDto = new DataTransferObject.NewsDto ();
-               itemDto.NewsId = item.NewsId;
-               itemDto.Title = item.Title;
-               itemDto.Anounce = item.Anounce;
-               itemDto.Text = item.Text;
-               itemDto.Status = item.Status.ToString();
-               itemDto.Category = item.Category.MapToDto();
-               itemDto.Created = item.Created;
-               itemDto.Author = item.Author.Login;
-               itemDto.Tags = item.NewsToTags.Select(p => p.Tag.Name);
+                itemDto.NewsId = item.NewsId;
+                itemDto.Title = item.Title;
+                itemDto.Anounce = item.Anounce;
+                itemDto.Text = item.Text;
+                itemDto.Status = item.Status.ToString();
+                itemDto.Category = item.Category.MapToDto();
+                itemDto.Created = item.Created;
+                itemDto.Author = item.Author.Login;
+                itemDto.Tags = item.NewsToTags.Select(p => p.Tag.Name);
 
             return itemDto;
         }
@@ -32,14 +31,14 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
         {  
             if (itemDto == null) return null;
             
-            var item =  new DataObjects.News ();
-                 item.NewsId = itemDto.NewsId.HasValue ? itemDto.NewsId.Value : default(System.Guid);
-                 item.Title = itemDto.Title;
-                 item.Anounce = itemDto.Anounce;
-                 item.Text = itemDto.Text;
-                 item.Status = (DataObjects.Attributes.StatusEnum) System.Enum.Parse(typeof(DataObjects.Attributes.StatusEnum), itemDto.Status);
-                 item.Category = itemDto.Category.MapFromDto();
-                 item.Created = itemDto.Created;
+            var item = new DataObjects.News ();
+                item.NewsId = itemDto.NewsId.HasValue ? itemDto.NewsId.Value : default(System.Guid);
+                item.Title = itemDto.Title;
+                item.Anounce = itemDto.Anounce;
+                item.Text = itemDto.Text;
+                item.Status = (DataObjects.Attributes.StatusEnum) System.Enum.Parse(typeof(DataObjects.Attributes.StatusEnum), itemDto.Status);
+                item.Category = itemDto.Category.MapFromDto();
+                item.Created = itemDto.Created;
             
             return item;
         }
@@ -49,10 +48,10 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
             if (item == null) return null;
             
             var itemDto = new DataTransferObject.CategoryDto ();
-               itemDto.NewsCategoryId = item.NewsCategoryId;
-               itemDto.Name = item.Name;
-               itemDto.ParentCategory = item.ParentCategory.MapToDto();
-               itemDto.ChildCategories = item.ChildCategories.Select(x => x.MapToDto());
+                itemDto.NewsCategoryId = item.NewsCategoryId;
+                itemDto.Name = item.Name;
+                itemDto.ParentCategory = item.ParentCategory.MapToDto();
+                itemDto.ChildCategories = item.ChildCategories.Select(x => x.MapToDto());
 
             return itemDto;
         }
@@ -61,11 +60,11 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
         {  
             if (itemDto == null) return null;
             
-            var item =  new DataObjects.NewsCategory ();
-                 item.NewsCategoryId = itemDto.NewsCategoryId;
-                 item.Name = itemDto.Name;
-                 item.ParentCategory = itemDto.ParentCategory.MapFromDto();
-                 item.ChildCategories = itemDto.ChildCategories.Select(x => x.MapFromDto());
+            var item = new DataObjects.NewsCategory ();
+                item.NewsCategoryId = itemDto.NewsCategoryId;
+                item.Name = itemDto.Name;
+                item.ParentCategory = itemDto.ParentCategory.MapFromDto();
+                item.ChildCategories = itemDto.ChildCategories.Select(x => x.MapFromDto());
             
             return item;
         }
@@ -75,10 +74,10 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
             if (item == null) return null;
             
             var itemDto = new DataTransferObject.UserDto ();
-               itemDto.UserId = item.UserId;
-               itemDto.Username = item.Login;
-               itemDto.Created = item.Created;
-               itemDto.Email = item.Email;
+                itemDto.UserId = item.UserId;
+                itemDto.Username = item.Login;
+                itemDto.Created = item.Created;
+                itemDto.Email = item.Email;
 
             return itemDto;
         }
@@ -87,13 +86,14 @@ namespace YumaPos.CommonViewModels.Core.MapExtensions
         {  
             if (itemDto == null) return null;
             
-            var item =  new DataObjects.User ();
-                 item.UserId = itemDto.UserId;
-                 item.Login = itemDto.Username;
-                 item.Created = itemDto.Created;
-                 item.Email = itemDto.Email;
+            var item = new DataObjects.User ();
+                item.UserId = itemDto.UserId;
+                item.Login = itemDto.Username;
+                item.Created = itemDto.Created;
+                item.Email = itemDto.Email;
             
             return item;
         }
-        }
+    
+    }
 }
