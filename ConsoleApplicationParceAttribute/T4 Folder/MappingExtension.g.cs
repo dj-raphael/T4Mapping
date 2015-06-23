@@ -64,7 +64,7 @@ namespace ConsoleApplicationParceAttribute
                 item.NewsCategoryId = itemDto.NewsCategoryId;
                 item.Name = itemDto.Name;
                 item.ParentCategory = itemDto.ParentCategory.MapFromDto();
-                item.ChildCategories = itemDto.ChildCategories.Select(x => x.MapFromDto());
+                if(itemDto.ChildCategories != null) item.ChildCategories.ReplaceRange(itemDto.ChildCategories.Select(x => x.MapFromDto()));
             
             return item;
         }

@@ -7,9 +7,20 @@ namespace DataObjects
     [Map]
     public class NewsCategory
     {
+        private readonly ObservableRangeCollection<NewsCategory> _childCategories;
+
+        public NewsCategory()
+        {
+            _childCategories = new ObservableRangeCollection<NewsCategory>();
+        }
+
         public Guid NewsCategoryId { get; set; }
         public string Name { get; set; }
         public NewsCategory ParentCategory { get; set; }
-        public IEnumerable<NewsCategory> ChildCategories { get; set; }
+
+        public ObservableRangeCollection<NewsCategory> ChildCategories
+        {
+            get { return _childCategories; }
+        }
     }
 }
