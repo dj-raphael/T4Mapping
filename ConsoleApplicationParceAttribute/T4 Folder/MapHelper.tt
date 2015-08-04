@@ -218,7 +218,7 @@ public class MapHelperClass
         var DtoType = DtoCodeProperty.Type.AsString;
 
 
-        if (DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable"))
+        if ((DOType.Contains("IEnumerable") && DtoType.Contains("IEnumerable")) || (DOType.Contains("ICollection") && DtoType.Contains("ICollection")) )
         {
             DOType = DOType.Remove(0, DOType.IndexOf("<") + 1);
             DOType = DOType.Replace(">", "");
@@ -278,7 +278,7 @@ public class MapHelperClass
     {
         var type = codeProperty.Type.AsString;
 
-        if (type.Contains("IEnumerable"))
+        if (type.Contains("IEnumerable") || type.Contains("ICollection"))
         {
             type = type.Remove(0, type.IndexOf("<") + 1);
             type = type.Replace(">", "");
@@ -530,18 +530,34 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                             {
                                 if(codeProperty.Type.AsString.Contains("ObservableRangeCollection"))
                                 {
-                                    FromDtoFunction = "if(itemDto." + dtoCodeProperty.Name +  " != null) item." + codeProperty.Name + ".ReplaceRange(itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()))";
+                                    FromDtoFunction = "if (itemDto." + dtoCodeProperty.Name +  " != null) item." + codeProperty.Name + ".ReplaceRange(itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()))";
+									ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
+                                }
+
+								if(codeProperty.Type.AsString.Contains("ICollection"))
+                                {
+                                    FromDtoFunction = "if (itemDto." + dtoCodeProperty.Name + " != null) item." + codeProperty.Name + " = itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()).ToArray()";
 									ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
                                 }
 
                                 if(dtoCodeProperty.Type.AsString.Contains("ObservableRangeCollection"))
                                 {
-                                    ToDtoFunction = "if(item." + codeProperty.Name +  " != null) itemDto." + dtoCodeProperty.Name + ".ReplaceRange(item." + codeProperty.Name + ".Select(x => x.MapToDto()))";
+                                    ToDtoFunction = "if (item." + codeProperty.Name +  " != null) itemDto." + dtoCodeProperty.Name + ".ReplaceRange(item." + codeProperty.Name + ".Select(x => x.MapToDto()))";
                                     if(FromDtoFunction == "") 
                                     {
                                         FromDtoFunction = "item." + codeProperty.Name + " = " + "itemDto." + dtoCodeProperty.Name;
                                     }
                                 }
+
+								if(dtoCodeProperty.Type.AsString.Contains("ICollection"))
+                                {
+                                    ToDtoFunction = "if (item." + codeProperty.Name + " != null) itemDto." + dtoCodeProperty.Name + " = item." + codeProperty.Name + ".Select(x => x.MapToDto()).ToArray()";
+                                    if(FromDtoFunction == "") 
+                                    {
+                                        FromDtoFunction = "item." + codeProperty.Name + " = " + "itemDto." + dtoCodeProperty.Name;
+                                    }
+                                }
+
                             }
 
                             if(!isSetterDO && !codeProperty.Type.AsString.Contains("ObservableRangeCollection"))
