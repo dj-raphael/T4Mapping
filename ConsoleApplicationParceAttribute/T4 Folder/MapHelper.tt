@@ -74,8 +74,8 @@ public class MapHelperClass
     public string MapAttribute { get; set; }
     public string MapIgnoreAttribute { get; set; }
 
-	public bool DOSkipAttribute {get; set;}
-	public bool DTOSkipAttribute {get; set;}
+    public bool DOSkipAttribute {get; set;}
+    public bool DTOSkipAttribute {get; set;}
 
     public string DoSuffix { get; set; }
     public string DtoSuffix { get; set; }
@@ -311,12 +311,12 @@ public class MapHelperClass
     }
 }
 
-	public List<CodeClass> GetAllClasses(string project)
+    public List<CodeClass> GetAllClasses(string project)
     {
-		var projects = VisualStudioHelper.GetProject(project);
+        var projects = VisualStudioHelper.GetProject(project);
         var projectItems =  VisualStudioHelper.GetAllProjectItems(projects);
         var allClasses = VisualStudioHelper.GetClasses(projectItems);
-		return allClasses;
+        return allClasses;
     }
 
  public void GenerateMap(MapHelperClass MapHelper)
@@ -360,31 +360,31 @@ public class MapHelperClass
         var classesWithMapAttribute = new List<CodeClass>();
         var classesWithMapAttributeDto = new List<CodeClass>(); 
 
-		if (MapHelper.DOSkipAttribute)
+        if (MapHelper.DOSkipAttribute)
         {
-			foreach(string project in MapHelper.DoProjects)
-			{
-				classesWithMapAttribute.AddRange(GetAllClasses(project));
-			}
+            foreach(string project in MapHelper.DoProjects)
+            {
+                classesWithMapAttribute.AddRange(GetAllClasses(project));
+            }
         } else 
         {
-			foreach(string project in MapHelper.DoProjects)
-			{
-				classesWithMapAttribute.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
-			}
+            foreach(string project in MapHelper.DoProjects)
+            {
+                classesWithMapAttribute.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
+            }
         }
-		if (MapHelper.DOSkipAttribute)
+        if (MapHelper.DOSkipAttribute)
         {
-			 foreach(string project in MapHelper.DtoProjects)
-			 {
+             foreach(string project in MapHelper.DtoProjects)
+             {
                   classesWithMapAttributeDto.AddRange(GetAllClasses(project));
-			 }
+             }
         } else 
         {
-			foreach(string project in MapHelper.DtoProjects)
-			{
-				classesWithMapAttributeDto.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
-			}
+            foreach(string project in MapHelper.DtoProjects)
+            {
+                classesWithMapAttributeDto.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
+            }
         }
 
     #>
@@ -406,8 +406,8 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                     CodeInterface dtoInterface = null;
 
                     if (MapHelper.GetMapName((CodeElement)doClass) == MapHelper.GetMapName((CodeElement)dtoClass)||
-					   (MapHelper.DOSkipAttribute && MapHelper.GetMapName((CodeElement) dtoClass)==doClass.Name) || 
-					   (MapHelper.DTOSkipAttribute && MapHelper.GetMapName((CodeElement) doClass)==dtoClass.Name))
+                       (MapHelper.DOSkipAttribute && MapHelper.GetMapName((CodeElement) dtoClass)==doClass.Name) || 
+                       (MapHelper.DTOSkipAttribute && MapHelper.GetMapName((CodeElement) doClass)==dtoClass.Name))
                     {
                         foreach(CodeInterface ce in doClass.ImplementedInterfaces)  
                         {
@@ -462,19 +462,19 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                 var allMethodsDto = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementFunction, true);
                 foreach(CodeClass ce in CECollection)  allMethodsDto.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementFunction, true));
 
-				var isIgnoreDOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
-				var isIgnoreDTOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
+                var isIgnoreDOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
+                var isIgnoreDTOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
 
                 var listOfSimilarProperties = new List<MapPropertiesDtoAndDo>();
 
                 while (allProperties.Any())
                 {
-					var attrIgnoreDo = new AttributeAndPropeperties();
+                    var attrIgnoreDo = new AttributeAndPropeperties();
                     attrIgnoreDo = null;
 
                     CodeProperty codeProperty = (CodeProperty) allProperties.First();
 
-					if(MapHelper.MapIgnoreAttribute != null && MapHelper.MapIgnoreAttribute != "")
+                    if(MapHelper.MapIgnoreAttribute != null && MapHelper.MapIgnoreAttribute != "")
                     { 
                         attrIgnoreDo = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == MapHelper.MapIgnoreAttribute);
                     }
@@ -569,13 +569,13 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                                 if(codeProperty.Type.AsString.Contains("ObservableRangeCollection"))
                                 {
                                     FromDtoFunction = "if (itemDto." + dtoCodeProperty.Name +  " != null) item." + codeProperty.Name + ".ReplaceRange(itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()))";
-									ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
+                                    ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
                                 }
 
-								if(codeProperty.Type.AsString.Contains("ICollection"))
+                                if(codeProperty.Type.AsString.Contains("ICollection"))
                                 {
                                     FromDtoFunction = "if (itemDto." + dtoCodeProperty.Name + " != null) item." + codeProperty.Name + " = itemDto." + dtoCodeProperty.Name + ".Select(x => x.MapFromDto()).ToArray()";
-									ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
+                                    ToDtoFunction = "itemDto." + dtoCodeProperty.Name + " = " + "item." + codeProperty.Name + ".Select(x => x.MapToDto())";
                                 }
 
                                 if(dtoCodeProperty.Type.AsString.Contains("ObservableRangeCollection"))
@@ -587,7 +587,7 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                                     }
                                 }
 
-								if(dtoCodeProperty.Type.AsString.Contains("ICollection"))
+                                if(dtoCodeProperty.Type.AsString.Contains("ICollection"))
                                 {
                                     ToDtoFunction = "if (item." + codeProperty.Name + " != null) itemDto." + dtoCodeProperty.Name + " = item." + codeProperty.Name + ".Select(x => x.MapToDto()).ToArray()";
                                     if(FromDtoFunction == "") 
@@ -646,13 +646,13 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                                         FromDtoFunction = FromDtoFunction,
                                         ToDtoFunction = ToDtoFunction
                                     });
-									isIgnoreDOProperties.Remove((CodeElement)codeProperty);
-									isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
+                                    isIgnoreDOProperties.Remove((CodeElement)codeProperty);
+                                    isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
                                 }
 
-								if (attrIgnoreDto != null)
+                                if (attrIgnoreDto != null)
                                 {
-									isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
+                                    isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
                                 }
 
                                 allPropertiesDto.Remove((CodeElement)dtoCodeProperty); 
@@ -660,10 +660,10 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                             }
                         }
                     }
-					if (attrIgnoreDo != null)
-					{
-						isIgnoreDOProperties.Remove((CodeElement)codeProperty);
-					}
+                    if (attrIgnoreDo != null)
+                    {
+                        isIgnoreDOProperties.Remove((CodeElement)codeProperty);
+                    }
                     allProperties.Remove((CodeElement)codeProperty);
                 }
 
@@ -675,7 +675,7 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
 <#+         foreach (var prop in isIgnoreDOProperties)
             {
 #>            //itemDo.<#= prop.Name #>
-<#+			}
+<#+            }
 #>
             if (item == null) return null;
             
@@ -696,7 +696,7 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
 <#+         foreach (var prop in isIgnoreDTOProperties)
             {
 #>            //itemDto.<#= prop.Name #>
-<#+			}
+<#+            }
 #>
             if (itemDto == null) return null;
             
