@@ -74,6 +74,9 @@ public class MapHelperClass
     public string MapAttribute { get; set; }
     public string MapIgnoreAttribute { get; set; }
 
+	public bool DOSkipAttribute {get; set;}
+	public bool DTOSkipAttribute {get; set;}
+
     public string DoSuffix { get; set; }
     public string DtoSuffix { get; set; }
 
@@ -308,6 +311,14 @@ public class MapHelperClass
     }
 }
 
+	public List<CodeClass> GetAllClasses(string project)
+    {
+		var projects = VisualStudioHelper.GetProject(project);
+        var projectItems =  VisualStudioHelper.GetAllProjectItems(projects);
+        var allClasses = VisualStudioHelper.GetClasses(projectItems);
+		return allClasses;
+    }
+
  public void GenerateMap(MapHelperClass MapHelper)
     {
 
@@ -348,15 +359,32 @@ public class MapHelperClass
 
         var classesWithMapAttribute = new List<CodeClass>();
         var classesWithMapAttributeDto = new List<CodeClass>(); 
- 
-        foreach(string project in MapHelper.DoProjects)
-        {
-            classesWithMapAttribute.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
-        }
 
-        foreach(string project in MapHelper.DtoProjects)
+		if (MapHelper.DOSkipAttribute)
         {
-            classesWithMapAttributeDto.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
+			foreach(string project in MapHelper.DoProjects)
+			{
+				classesWithMapAttribute.AddRange(GetAllClasses(project));
+			}
+        } else 
+        {
+			foreach(string project in MapHelper.DoProjects)
+			{
+				classesWithMapAttribute.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
+			}
+        }
+		if (MapHelper.DOSkipAttribute)
+        {
+			 foreach(string project in MapHelper.DtoProjects)
+			 {
+                  classesWithMapAttributeDto.AddRange(GetAllClasses(project));
+			 }
+        } else 
+        {
+			foreach(string project in MapHelper.DtoProjects)
+			{
+				classesWithMapAttributeDto.AddRange(VisualStudioHelper.GetClassesByAttributeName(MapHelper.MapAttribute,project));
+			}
         }
 
     #>
@@ -377,7 +405,9 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                     CodeInterface doInterface = null;
                     CodeInterface dtoInterface = null;
 
-                    if (MapHelper.GetMapName((CodeElement)doClass) == MapHelper.GetMapName((CodeElement)dtoClass))
+                    if (MapHelper.GetMapName((CodeElement)doClass) == MapHelper.GetMapName((CodeElement)dtoClass)||
+					   (MapHelper.DOSkipAttribute && MapHelper.GetMapName((CodeElement) dtoClass)==doClass.Name) || 
+					   (MapHelper.DTOSkipAttribute && MapHelper.GetMapName((CodeElement) doClass)==dtoClass.Name))
                     {
                         foreach(CodeInterface ce in doClass.ImplementedInterfaces)  
                         {
@@ -432,22 +462,30 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                 var allMethodsDto = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementFunction, true);
                 foreach(CodeClass ce in CECollection)  allMethodsDto.AddRange(VisualStudioHelper.GetAllCodeElementsOfType(ce.Members, vsCMElement.vsCMElementFunction, true));
 
+				var isIgnoreDOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DOClass.Members, vsCMElement.vsCMElementProperty, true);
+				var isIgnoreDTOProperties = VisualStudioHelper.GetAllCodeElementsOfType(similarClass.DtoClass.Members, vsCMElement.vsCMElementProperty, true);
+
                 var listOfSimilarProperties = new List<MapPropertiesDtoAndDo>();
 
                 while (allProperties.Any())
                 {
+					var attrIgnoreDo = new AttributeAndPropeperties();
+                    attrIgnoreDo = null;
+
                     CodeProperty codeProperty = (CodeProperty) allProperties.First();
+
+					if(MapHelper.MapIgnoreAttribute != null && MapHelper.MapIgnoreAttribute != "")
+                    { 
+                        attrIgnoreDo = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == MapHelper.MapIgnoreAttribute);
+                    }
 
                     foreach (CodeProperty dtoCodeProperty in allPropertiesDto)
                     {
-                        var attrIgnoreDo = new AttributeAndPropeperties();
-                            attrIgnoreDo = null;
-                        var attrIgnoreDto = new AttributeAndPropeperties();
+                       var attrIgnoreDto = new AttributeAndPropeperties();
                             attrIgnoreDto = null;
 
                         if(MapHelper.MapIgnoreAttribute != null && MapHelper.MapIgnoreAttribute != "")
                         { 
-                            attrIgnoreDo = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)codeProperty).FirstOrDefault(x => x.Name == MapHelper.MapIgnoreAttribute);
                             attrIgnoreDto = VisualStudioHelper.GetAttributesAndPropepertiesCollection((CodeElement)dtoCodeProperty).FirstOrDefault(x => x.Name == MapHelper.MapIgnoreAttribute);
                         }
 
@@ -608,6 +646,13 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                                         FromDtoFunction = FromDtoFunction,
                                         ToDtoFunction = ToDtoFunction
                                     });
+									isIgnoreDOProperties.Remove((CodeElement)codeProperty);
+									isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
+                                }
+
+								if (attrIgnoreDto != null)
+                                {
+									isIgnoreDTOProperties.Remove((CodeElement)dtoCodeProperty);
                                 }
 
                                 allPropertiesDto.Remove((CodeElement)dtoCodeProperty); 
@@ -615,6 +660,10 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
                             }
                         }
                     }
+					if (attrIgnoreDo != null)
+					{
+						isIgnoreDOProperties.Remove((CodeElement)codeProperty);
+					}
                     allProperties.Remove((CodeElement)codeProperty);
                 }
 
@@ -623,6 +672,11 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
     #>    
         public static <#= similarClass.DtoInterface == null ? similarClass.DtoClass.FullName : similarClass.DtoInterface.FullName #> MapToDto (this <#= similarClass.DOInterface == null ? similarClass.DOClass.FullName : similarClass.DOInterface.FullName #> item)
         {  
+<#+         foreach (var prop in isIgnoreDOProperties)
+            {
+#>            //itemDo.<#= prop.Name #>
+<#+			}
+#>
             if (item == null) return null;
             
             var itemDto = new <#= similarClass.DtoClass.FullName #> ();
@@ -639,6 +693,11 @@ namespace <#= MapHelper.MapExtensionNameSpace #>
 
         public static <#= similarClass.DOInterface == null ? similarClass.DOClass.FullName : similarClass.DOInterface.FullName #> MapFromDto (this <#= similarClass.DtoInterface == null ? similarClass.DtoClass.FullName : similarClass.DtoInterface.FullName #> itemDto)
         {  
+<#+         foreach (var prop in isIgnoreDTOProperties)
+            {
+#>            //itemDto.<#= prop.Name #>
+<#+			}
+#>
             if (itemDto == null) return null;
             
             var item = new <#= similarClass.DOClass.FullName #> ();

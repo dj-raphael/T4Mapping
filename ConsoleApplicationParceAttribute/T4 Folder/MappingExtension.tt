@@ -16,6 +16,8 @@ using System.Linq;
     MapHelper.DoSuffix = "ViewModel";
     MapHelper.DoProjects.Add("DataObject");
     MapHelper.DtoProjects.Add("DataTransferObject");
+	MapHelper.DOSkipAttribute=false;
+	MapHelper.DTOSkipAttribute=false;
 
     GenerateMap(MapHelper);
 #>
