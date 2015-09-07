@@ -71,6 +71,7 @@ namespace ConsoleApplicationParceAttribute
         
         public static DataTransferObject.UserDto MapToDto (this DataObjects.User item)
         {  
+            //itemDo.Hash
             if (item == null) return null;
             
             var itemDto = new DataTransferObject.UserDto ();
